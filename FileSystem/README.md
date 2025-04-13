@@ -50,4 +50,4 @@ GetFolderStructureには、.gitignoreファイルを解析するための高度�
 
 ## ライセンス
 
-このプロジェクトは[MITライセンス](LICENSE)の下でライセンスされています。m
+このプロジェクトは[MITライセンス](LICENSE.txt)の下でライセンスされています。

@@ -57,7 +57,8 @@ public static class FileSystemTools
 
   [McpServerTool, Description("Retrieves the hierarchical folder structure from a specified directory path.")]
     public static string GetFolderStructure(
-         [Description("Absolute path to the root directory whose folder structure should be retrieved.")] string fullPath)
+         [Description("Absolute path to the root directory whose folder structure should be retrieved.")] string fullPath,
+         [Description("Specifies whether to include subdirectories recursively in the folder structure. If set to true, the function will traverse through all nested directories. If false, only the immediate children of the root directory will be included.")] bool recursive = true)
     {
         if (!Directory.Exists(fullPath))
             throw new DirectoryNotFoundException($"Directory not found: {fullPath}");
@@ -65,12 +66,12 @@ public static class FileSystemTools
         var sb = new StringBuilder();
         // ルートディレクトリ名を追加
         sb.AppendLine(Path.GetFileName(fullPath) + "/");
-        TraverseDirectory(fullPath, sb, "", ignorePatterns, fullPath);
+        TraverseDirectory(fullPath, sb, "", ignorePatterns, fullPath, recursive);
         return sb.ToString();
     }
 
     private static void TraverseDirectory(string path, StringBuilder sb, string indent,
-        List<Regex> ignorePatterns, string rootPath)
+        List<Regex> ignorePatterns, string rootPath, bool recursive)
     {
         string relativePath = Path.GetRelativePath(rootPath, path).Replace("\\", "/");
         // ルートディレクトリはスキップしない
@@ -115,13 +116,16 @@ public static class FileSystemTools
                 childIgnorePatterns.AddRange(ParseGitIgnore(gitignorePath, filteredDirs[i], rootPath));
             }
 
+            if (recursive == false) continue;
+
             // 再帰的にサブディレクトリを処理
             TraverseDirectory(
                 filteredDirs[i],
                 sb,
                 indent + (isLast ? "    " : "|   "),
                 childIgnorePatterns,
-                rootPath
+                rootPath,
+                recursive
             );
         }
     }
