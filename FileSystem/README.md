@@ -11,6 +11,7 @@ CSharpMcpServer FileSystemは、Model Context Protocol (MCP) サーバーのフ�
 ## Usage with Claude Desktop
 - Add this to your claude_desktop_config.json
 - dotnet 8.0以上が必要
+- ビルドが必要
 
 ```
 {
