@@ -33,7 +33,7 @@ CSharpMcpServer FileSystemは、Model Context Protocol (MCP) サーバーのフ�
 
 ## .gitignore対応
 
-GetFolderStructureには、.gitignoreファイルを解析するための高度な機能があります：
+GetFolderStructureには、.gitignoreファイルを解析します：
 
 - ルートディレクトリの.gitignoreを読み込み
 - サブディレクトリの.gitignoreも適切に処理
@@ -48,7 +48,3 @@ GetFolderStructureには、.gitignoreファイルを解析するための高度�
 - .vs、*.user、*.suoなどのVisual Studioファイル
 - node_modules、packagesなどのパッケージディレクトリ
 - ログファイル、バックアップファイル、キャッシュファイル
-
-## ライセンス
-
-このプロジェクトは[MITライセンス](LICENSE.txt)の下でライセンスされています。
