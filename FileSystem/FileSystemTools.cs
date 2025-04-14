@@ -16,7 +16,7 @@ public static class FileSystemTools
     {
         Security.ValidateIsAllowedDirectory(filePath);
 
-        // è¦ªãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªãŒç„¡ã‘ã‚Œã°ä½œæˆ
+        // eƒfƒBƒŒƒNƒgƒŠ‚ª–³‚¯‚ê‚Îì¬
         string directory = Path.GetDirectoryName(filePath);
         if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
         {
@@ -55,32 +55,44 @@ public static class FileSystemTools
         }
     }
 
-  [McpServerTool, Description("Retrieves the hierarchical folder structure from a specified directory path.")]
+    [McpServerTool, Description("Retrieves the hierarchical folder structure in YAML format from a specified directory path.")]
     public static string GetFolderStructure(
-         [Description("Absolute path to the root directory whose folder structure should be retrieved.")] string fullPath,
-         [Description("Specifies whether to include subdirectories recursively in the folder structure. If set to true, the function will traverse through all nested directories. If false, only the immediate children of the root directory will be included.")] bool recursive = true)
+        [Description("Absolute path to the root directory whose folder structure should be retrieved.")] string fullPath,
+        [Description("Specifies whether to include subdirectories recursively in the folder structure. If set to true, the function will traverse through all nested directories. If false, only the immediate children of the root directory will be included.")] bool recursive = true)
     {
         if (!Directory.Exists(fullPath))
             throw new DirectoryNotFoundException($"Directory not found: {fullPath}");
+        
         var ignorePatterns = LoadIgnorePatterns(fullPath);
         var sb = new StringBuilder();
-        // ãƒ«ãƒ¼ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªåã‚’è¿½åŠ 
-        sb.AppendLine(Path.GetFileName(fullPath) + "/");
-        TraverseDirectory(fullPath, sb, "", ignorePatterns, fullPath, recursive);
+        
+        // ƒ‹[ƒgƒfƒBƒŒƒNƒgƒŠ–¼‚ğYAML‚Ìƒ‹[ƒg—v‘f‚Æ‚µ‚Ä’Ç‰Á
+        string rootName = Path.GetFileName(fullPath);
+        sb.AppendLine($"{rootName}:");
+        
+        // ƒfƒBƒŒƒNƒgƒŠ‚Ì“à—e‚ğYAMLŒ`®‚Å’Ç‰Á
+        TraverseDirectoryYaml(fullPath, sb, "  ", ignorePatterns, fullPath, recursive);
+        
         return sb.ToString();
     }
 
-    private static void TraverseDirectory(string path, StringBuilder sb, string indent,
-        List<Regex> ignorePatterns, string rootPath, bool recursive)
+    private static void TraverseDirectoryYaml(
+        string path, 
+        StringBuilder sb, 
+        string indent,
+        List<Regex> ignorePatterns, 
+        string rootPath, 
+        bool recursive)
     {
         string relativePath = Path.GetRelativePath(rootPath, path).Replace("\\", "/");
-        // ãƒ«ãƒ¼ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã¯ã‚¹ã‚­ãƒƒãƒ—ã—ãªã„
+        // ƒ‹[ƒgƒfƒBƒŒƒNƒgƒŠ‚ÍƒXƒLƒbƒv‚µ‚È‚¢
         if (path != rootPath && IsIgnored(relativePath, ignorePatterns)) return;
-        // ãƒ•ã‚¡ã‚¤ãƒ«ã¨ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã®ä¸€è¦§ã‚’å–å¾—
+        
+        // ƒtƒ@ƒCƒ‹‚ÆƒfƒBƒŒƒNƒgƒŠ‚Ìˆê——‚ğæ“¾
         var files = Directory.GetFiles(path);
         var directories = Directory.GetDirectories(path);
 
-        // ç„¡è¦–ãƒ‘ã‚¿ãƒ¼ãƒ³ã§ãƒ•ã‚£ãƒ«ã‚¿ãƒªãƒ³ã‚°
+        // –³‹ƒpƒ^[ƒ“‚ÅƒtƒBƒ‹ƒ^ƒŠƒ“ƒO
         var filteredFiles = files
             .Where(file => !IsIgnored(Path.GetRelativePath(rootPath, file).Replace("\\", "/"), ignorePatterns))
             .OrderBy(file => Path.GetFileName(file))
@@ -90,35 +102,118 @@ public static class FileSystemTools
             .Where(dir => !IsIgnored(Path.GetRelativePath(rootPath, dir).Replace("\\", "/"), ignorePatterns))
             .OrderBy(dir => Path.GetFileName(dir))
             .ToArray();
-        // ãƒ•ã‚¡ã‚¤ãƒ«ã®è¡¨ç¤º
+
+        // ƒtƒ@ƒCƒ‹‚Ì•\¦iYAMLƒŠƒXƒgŒ`®j
+        if (filteredFiles.Length > 0)
+        {
+            // ƒtƒ@ƒCƒ‹‚ğƒŠƒXƒgŒ`®‚Å’Ç‰Ái"files:"ƒ‰ƒxƒ‹‚È‚µj
+            if (path == rootPath)
+            {
+                foreach (var file in filteredFiles)
+                {
+                    sb.AppendLine($"{indent}- {Path.GetFileName(file)}");
+                }
+            }
+            else
+            {
+                // ƒTƒuƒfƒBƒŒƒNƒgƒŠ‚Å‚ÍAƒtƒ@ƒCƒ‹‚ğƒŠƒXƒgŒ`®‚Å’Ç‰Á
+                foreach (var file in filteredFiles)
+                {
+                    sb.AppendLine($"{indent}- {Path.GetFileName(file)}");
+                }
+            }
+        }
+
+        // ƒTƒuƒfƒBƒŒƒNƒgƒŠ‚ğˆ—i"directories:"ƒ‰ƒxƒ‹‚È‚µj
+        foreach (var dir in filteredDirs)
+        {
+            var dirName = Path.GetFileName(dir);
+
+            // ƒfƒBƒŒƒNƒgƒŠ–¼‚ğ•\¦
+            if (path == rootPath)
+            {
+                sb.AppendLine($"{indent}{dirName}:");
+            }
+            else
+            {
+                sb.AppendLine($"{indent}{dirName}:");
+            }
+
+            // qƒfƒBƒŒƒNƒgƒŠ‚Ì.gitignore‚ğŠm”F
+            string gitignorePath = Path.Combine(dir, ".gitignore");
+            List<Regex> childIgnorePatterns = new List<Regex>(ignorePatterns);
+
+            if (File.Exists(gitignorePath))
+            {
+                // e‚Ì–³‹ƒpƒ^[ƒ“‚É‰Á‚¦‚ÄAqƒfƒBƒŒƒNƒgƒŠ‚Ì.gitignore‚©‚ç‚Ìƒpƒ^[ƒ“‚ğ’Ç‰Á
+                childIgnorePatterns.AddRange(ParseGitIgnore(gitignorePath, dir, rootPath));
+            }
+
+            if (recursive == false) continue;
+
+            // Ä‹A“I‚ÉƒTƒuƒfƒBƒŒƒNƒgƒŠ‚ğˆ—
+            string newIndent = path == rootPath ? indent + "  " : indent + "  ";
+            TraverseDirectoryYaml(
+                dir,
+                sb,
+                newIndent,
+                childIgnorePatterns,
+                rootPath,
+                recursive
+            );
+        }
+    }
+
+    // ˆÈ‰º‚Ìƒƒ\ƒbƒh‚Í•ÏX‚È‚µ
+    private static void TraverseDirectory(string path, StringBuilder sb, string indent,
+        List<Regex> ignorePatterns, string rootPath, bool recursive)
+    {
+        string relativePath = Path.GetRelativePath(rootPath, path).Replace("\\", "/");
+        // ƒ‹[ƒgƒfƒBƒŒƒNƒgƒŠ‚ÍƒXƒLƒbƒv‚µ‚È‚¢
+        if (path != rootPath && IsIgnored(relativePath, ignorePatterns)) return;
+        // ƒtƒ@ƒCƒ‹‚ÆƒfƒBƒŒƒNƒgƒŠ‚Ìˆê——‚ğæ“¾
+        var files = Directory.GetFiles(path);
+        var directories = Directory.GetDirectories(path);
+
+        // –³‹ƒpƒ^[ƒ“‚ÅƒtƒBƒ‹ƒ^ƒŠƒ“ƒO
+        var filteredFiles = files
+            .Where(file => !IsIgnored(Path.GetRelativePath(rootPath, file).Replace("\\", "/"), ignorePatterns))
+            .OrderBy(file => Path.GetFileName(file))
+            .ToArray();
+
+        var filteredDirs = directories
+            .Where(dir => !IsIgnored(Path.GetRelativePath(rootPath, dir).Replace("\\", "/"), ignorePatterns))
+            .OrderBy(dir => Path.GetFileName(dir))
+            .ToArray();
+        // ƒtƒ@ƒCƒ‹‚Ì•\¦
         for (int i = 0; i < filteredFiles.Length; i++)
         {
             var fileName = Path.GetFileName(filteredFiles[i]);
             bool isLast = i == filteredFiles.Length - 1 && filteredDirs.Length == 0;
             sb.AppendLine($"{indent}|-- {fileName}");
         }
-        // ã‚µãƒ–ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚’å‡¦ç†
+        // ƒTƒuƒfƒBƒŒƒNƒgƒŠ‚ğˆ—
         for (int i = 0; i < filteredDirs.Length; i++)
         {
             var dirName = Path.GetFileName(filteredDirs[i]);
             bool isLast = i == filteredDirs.Length - 1;
 
-            // ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªåã‚’è¡¨ç¤º
+            // ƒfƒBƒŒƒNƒgƒŠ–¼‚ğ•\¦
             sb.AppendLine($"{indent}|-- {dirName}/");
 
-            // å­ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã®.gitignoreã‚’ç¢ºèª
+            // qƒfƒBƒŒƒNƒgƒŠ‚Ì.gitignore‚ğŠm”F
             string gitignorePath = Path.Combine(filteredDirs[i], ".gitignore");
             List<Regex> childIgnorePatterns = new List<Regex>(ignorePatterns);
 
             if (File.Exists(gitignorePath))
             {
-                // è¦ªã®ç„¡è¦–ãƒ‘ã‚¿ãƒ¼ãƒ³ã«åŠ ãˆã¦ã€å­ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã®.gitignoreã‹ã‚‰ã®ãƒ‘ã‚¿ãƒ¼ãƒ³ã‚’è¿½åŠ 
+                // e‚Ì–³‹ƒpƒ^[ƒ“‚É‰Á‚¦‚ÄAqƒfƒBƒŒƒNƒgƒŠ‚Ì.gitignore‚©‚ç‚Ìƒpƒ^[ƒ“‚ğ’Ç‰Á
                 childIgnorePatterns.AddRange(ParseGitIgnore(gitignorePath, filteredDirs[i], rootPath));
             }
 
             if (recursive == false) continue;
 
-            // å†å¸°çš„ã«ã‚µãƒ–ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚’å‡¦ç†
+            // Ä‹A“I‚ÉƒTƒuƒfƒBƒŒƒNƒgƒŠ‚ğˆ—
             TraverseDirectory(
                 filteredDirs[i],
                 sb,
@@ -130,14 +225,14 @@ public static class FileSystemTools
         }
     }
 
-    // ãƒ•ã‚¡ã‚¤ãƒ«ã‚„ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªãŒç„¡è¦–å¯¾è±¡ã‹ã©ã†ã‹ã‚’åˆ¤å®š
+    // ƒtƒ@ƒCƒ‹‚âƒfƒBƒŒƒNƒgƒŠ‚ª–³‹‘ÎÛ‚©‚Ç‚¤‚©‚ğ”»’è
     private static bool IsIgnored(string relativePath, List<Regex> ignorePatterns)
     {
-        // .ã§å§‹ã¾ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã¯ç„¡è¦–
+        // .‚Ån‚Ü‚éƒfƒBƒŒƒNƒgƒŠ‚Í–³‹
         if (relativePath.Split('/').Any(part => part.StartsWith(".") && part != "." && part != ".."))
             return true;
 
-        // æ­£è¦è¡¨ç¾ãƒ‘ã‚¿ãƒ¼ãƒ³ã«ä¸€è‡´ã™ã‚‹ã‹ãƒã‚§ãƒƒã‚¯
+        // ³‹K•\Œ»ƒpƒ^[ƒ“‚Éˆê’v‚·‚é‚©ƒ`ƒFƒbƒN
         foreach (var pattern in ignorePatterns)
         {
             if (pattern.IsMatch(relativePath))
@@ -147,15 +242,15 @@ public static class FileSystemTools
         return false;
     }
 
-    // ãƒ«ãƒ¼ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã®.gitignoreã‚’èª­ã¿è¾¼ã‚€
+    // ƒ‹[ƒgƒfƒBƒŒƒNƒgƒŠ‚Ì.gitignore‚ğ“Ç‚İ‚Ş
     private static List<Regex> LoadIgnorePatterns(string rootPath)
     {
         var patterns = new List<Regex>();
 
-        // å…±é€šãƒ†ãƒ³ãƒ—ãƒ¬ãƒ¼ãƒˆã®ç„¡è¦–ãƒ‘ã‚¿ãƒ¼ãƒ³ã‚’è¿½åŠ 
+        // ‹¤’Êƒeƒ“ƒvƒŒ[ƒg‚Ì–³‹ƒpƒ^[ƒ“‚ğ’Ç‰Á
         patterns.AddRange(GetCommonIgnorePatterns());
 
-        // ãƒ«ãƒ¼ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã®.gitignoreãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿è¾¼ã‚€
+        // ƒ‹[ƒgƒfƒBƒŒƒNƒgƒŠ‚Ì.gitignoreƒtƒ@ƒCƒ‹‚ğ“Ç‚İ‚Ş
         string gitignorePath = Path.Combine(rootPath, ".gitignore");
         if (File.Exists(gitignorePath))
         {
@@ -165,7 +260,7 @@ public static class FileSystemTools
         return patterns;
     }
 
-    // .gitignoreãƒ•ã‚¡ã‚¤ãƒ«ã‚’è§£æã—ã¦æ­£è¦è¡¨ç¾ãƒ‘ã‚¿ãƒ¼ãƒ³ã®ãƒªã‚¹ãƒˆã‚’è¿”ã™
+    // .gitignoreƒtƒ@ƒCƒ‹‚ğ‰ğÍ‚µ‚Ä³‹K•\Œ»ƒpƒ^[ƒ“‚ÌƒŠƒXƒg‚ğ•Ô‚·
     private static List<Regex> ParseGitIgnore(string gitignorePath, string currentDir, string rootPath)
     {
         var patterns = new List<Regex>();
@@ -179,15 +274,15 @@ public static class FileSystemTools
         {
             string trimmedLine = line.Trim();
 
-            // ã‚³ãƒ¡ãƒ³ãƒˆè¡Œã‚„ç©ºè¡Œã‚’ã‚¹ã‚­ãƒƒãƒ—
+            // ƒRƒƒ“ƒgs‚â‹ós‚ğƒXƒLƒbƒv
             if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith("#"))
                 continue;
 
-            // ç„¡è¦–ã—ãªã„ãƒ‘ã‚¿ãƒ¼ãƒ³ï¼ˆ!ã‹ã‚‰å§‹ã¾ã‚‹ï¼‰ã¯ç¾åœ¨ã‚µãƒãƒ¼ãƒˆã—ã¦ã„ãªã„
+            // –³‹‚µ‚È‚¢ƒpƒ^[ƒ“i!‚©‚çn‚Ü‚éj‚ÍŒ»İƒTƒ|[ƒg‚µ‚Ä‚¢‚È‚¢
             if (trimmedLine.StartsWith("!"))
                 continue;
 
-            // ãƒ‘ã‚¿ãƒ¼ãƒ³ã‚’æ­£è¦è¡¨ç¾ã«å¤‰æ›
+            // ƒpƒ^[ƒ“‚ğ³‹K•\Œ»‚É•ÏŠ·
             string regexPattern = ConvertGitWildcardToRegex(trimmedLine, relativeDir);
             patterns.Add(new Regex(regexPattern, RegexOptions.IgnoreCase));
         }
@@ -195,20 +290,20 @@ public static class FileSystemTools
         return patterns;
     }
 
-    // Gitã®ãƒ¯ã‚¤ãƒ«ãƒ‰ã‚«ãƒ¼ãƒ‰ãƒ‘ã‚¿ãƒ¼ãƒ³ã‚’æ­£è¦è¡¨ç¾ã«å¤‰æ›
+    // Git‚ÌƒƒCƒ‹ƒhƒJ[ƒhƒpƒ^[ƒ“‚ğ³‹K•\Œ»‚É•ÏŠ·
     private static string ConvertGitWildcardToRegex(string pattern, string relativeDir)
     {
         string result;
-        // æœ«å°¾ã®ã‚¹ãƒ©ãƒƒã‚·ãƒ¥ã‚’å‡¦ç†ï¼ˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã®ã¿ã«ãƒãƒƒãƒï¼‰
+        // ––”ö‚ÌƒXƒ‰ƒbƒVƒ…‚ğˆ—iƒfƒBƒŒƒNƒgƒŠ‚Ì‚İ‚Éƒ}ƒbƒ`j
         bool dirOnly = pattern.EndsWith("/");
         if (dirOnly)
             pattern = pattern.TrimEnd('/');
 
-        // ãƒ‘ã‚¿ãƒ¼ãƒ³ãŒ /ã§å§‹ã¾ã‚‹å ´åˆã¯ã€ãƒ«ãƒ¼ãƒˆã‹ã‚‰ã®çµ¶å¯¾ãƒ‘ã‚¹
+        // ƒpƒ^[ƒ“‚ª /‚Ån‚Ü‚éê‡‚ÍAƒ‹[ƒg‚©‚ç‚Ìâ‘ÎƒpƒX
         if (pattern.StartsWith("/"))
         {
             pattern = pattern.TrimStart('/');
-            // çµ¶å¯¾ãƒ‘ã‚¹ã®å ´åˆã€relativeDirã‚’å«ã‚ã¦å³å¯†ãªãƒ‘ã‚¹ã‚’æ§‹ç¯‰
+            // â‘ÎƒpƒX‚Ìê‡ArelativeDir‚ğŠÜ‚ß‚ÄŒµ–§‚ÈƒpƒX‚ğ\’z
             if (!string.IsNullOrEmpty(relativeDir))
             {
                 result = relativeDir + "/" + pattern;
@@ -220,38 +315,38 @@ public static class FileSystemTools
         }
         else
         {
-            // ç›¸å¯¾ãƒ‘ã‚¹ã®å ´åˆ
+            // ‘Š‘ÎƒpƒX‚Ìê‡
             if (!pattern.Contains("/"))
             {
-                // ã‚¹ãƒ©ãƒƒã‚·ãƒ¥ã‚’å«ã¾ãªã„ãƒ‘ã‚¿ãƒ¼ãƒ³ï¼ˆãƒ•ã‚¡ã‚¤ãƒ«åã‚„ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªåã®ã¿ï¼‰
+                // ƒXƒ‰ƒbƒVƒ…‚ğŠÜ‚Ü‚È‚¢ƒpƒ^[ƒ“iƒtƒ@ƒCƒ‹–¼‚âƒfƒBƒŒƒNƒgƒŠ–¼‚Ì‚İj
                 if (!string.IsNullOrEmpty(relativeDir))
                 {
-                    // relativeDirãŒæŒ‡å®šã•ã‚Œã¦ã„ã‚‹å ´åˆã€ãã®ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªå†…ã®ã©ã“ã‹ã‚’æ¢ã™
+                    // relativeDir‚ªw’è‚³‚ê‚Ä‚¢‚éê‡A‚»‚ÌƒfƒBƒŒƒNƒgƒŠ“à‚Ì‚Ç‚±‚©‚ğ’T‚·
                     result = relativeDir + "/(?:.*/)?(" + pattern + ")";
                 }
                 else
                 {
-                    // relativeDirãŒãªã„å ´åˆã¯ã€ä»»æ„ã®ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªéšå±¤ã«ãƒãƒƒãƒ
+                    // relativeDir‚ª‚È‚¢ê‡‚ÍA”CˆÓ‚ÌƒfƒBƒŒƒNƒgƒŠŠK‘w‚Éƒ}ƒbƒ`
                     result = "(?:.*/)?(" + pattern + ")";
                 }
             }
             else
             {
-                // ã‚¹ãƒ©ãƒƒã‚·ãƒ¥ã‚’å«ã‚€ãƒ‘ã‚¿ãƒ¼ãƒ³ï¼ˆãƒ‘ã‚¹æŒ‡å®šã‚ã‚Šï¼‰
+                // ƒXƒ‰ƒbƒVƒ…‚ğŠÜ‚Şƒpƒ^[ƒ“iƒpƒXw’è‚ ‚èj
                 if (!string.IsNullOrEmpty(relativeDir))
                 {
-                    // relativeDirãŒæŒ‡å®šã•ã‚Œã¦ã„ã‚‹å ´åˆã€ãã®ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚’ãƒ—ãƒ¬ãƒ•ã‚£ãƒƒã‚¯ã‚¹ã¨ã—ã¦ä½¿ç”¨
+                    // relativeDir‚ªw’è‚³‚ê‚Ä‚¢‚éê‡A‚»‚ÌƒfƒBƒŒƒNƒgƒŠ‚ğƒvƒŒƒtƒBƒbƒNƒX‚Æ‚µ‚Äg—p
                     result = relativeDir + "/" + pattern;
                 }
                 else
                 {
-                    // relativeDirãŒãªã„å ´åˆã¯ãƒ‘ã‚¿ãƒ¼ãƒ³ã‚’ãã®ã¾ã¾ä½¿ç”¨
+                    // relativeDir‚ª‚È‚¢ê‡‚Íƒpƒ^[ƒ“‚ğ‚»‚Ì‚Ü‚Üg—p
                     result = pattern;
                 }
             }
         }
 
-        // ãƒ¯ã‚¤ãƒ«ãƒ‰ã‚«ãƒ¼ãƒ‰ã‚’Regexã«å¤‰æ›
+        // ƒƒCƒ‹ƒhƒJ[ƒh‚ğRegex‚É•ÏŠ·
         result = result
             .Replace(".", "\\.")
             .Replace("**/", "(?:.*/)?")
@@ -259,7 +354,7 @@ public static class FileSystemTools
             .Replace("*", "[^/]*")
             .Replace("?", "[^/]");
 
-        // ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã®ã¿ã«ãƒãƒƒãƒã•ã›ã‚‹å ´åˆã¯æœ«å°¾ã«/ã‚’ä»˜ã‘ã‚‹æ¡ä»¶ã‚’è¿½åŠ 
+        // ƒfƒBƒŒƒNƒgƒŠ‚Ì‚İ‚Éƒ}ƒbƒ`‚³‚¹‚éê‡‚Í––”ö‚É/‚ğ•t‚¯‚éğŒ‚ğ’Ç‰Á
         if (dirOnly)
         {
             result += "(?:/.*)?";
@@ -269,45 +364,45 @@ public static class FileSystemTools
             result += "(?:$|/.*)";
         }
 
-        // å…ˆé ­ã¨æœ«å°¾ã®ãƒãƒƒãƒãƒ³ã‚°ã‚’èª¿æ•´
+        // æ“ª‚Æ––”ö‚Ìƒ}ƒbƒ`ƒ“ƒO‚ğ’²®
         return @"^" + result + @"$";
     }
 
-    // å…±é€šã§ç„¡è¦–ã™ã‚‹ãƒ‘ã‚¿ãƒ¼ãƒ³ã‚’å–å¾—
+    // ‹¤’Ê‚Å–³‹‚·‚éƒpƒ^[ƒ“‚ğæ“¾
     private static List<Regex> GetCommonIgnorePatterns()
     {
         var patterns = new List<Regex>
         {
-            // .gitãƒ•ã‚©ãƒ«ãƒ€ã‚’ç„¡è¦–
+            // .gitƒtƒHƒ‹ƒ_‚ğ–³‹
             new Regex(@"^(?:.+/)?\.git(?:/.*)?$", RegexOptions.IgnoreCase),
             new Regex(@"^(?:.+/)?\.next(?:/.*)?$", RegexOptions.IgnoreCase),
             
-            // ãƒ“ãƒ«ãƒ‰ç”Ÿæˆç‰©ã‚’ç„¡è¦–
+            // ƒrƒ‹ƒh¶¬•¨‚ğ–³‹
             new Regex(@"^(?:.+/)?bin(?:/.*)?$", RegexOptions.IgnoreCase),
             new Regex(@"^(?:.+/)?obj(?:/.*)?$", RegexOptions.IgnoreCase),
             new Regex(@"^(?:.+/)?target(?:/.*)?$", RegexOptions.IgnoreCase),
             new Regex(@"^(?:.+/)?dist(?:/.*)?$", RegexOptions.IgnoreCase),
             new Regex(@"^(?:.+/)?lib(?:/.*)?$", RegexOptions.IgnoreCase),
             
-            // Visual Studioã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ç„¡è¦–
+            // Visual Studio‚Ìƒtƒ@ƒCƒ‹‚ğ–³‹
             new Regex(@"^(?:.+/)?\.vs(?:/.*)?$", RegexOptions.IgnoreCase),
             new Regex(@"^.*\.user$", RegexOptions.IgnoreCase),
             new Regex(@"^.*\.suo$", RegexOptions.IgnoreCase),
             
-            // ã‚­ãƒ£ãƒƒã‚·ãƒ¥ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ç„¡è¦–
+            // ƒLƒƒƒbƒVƒ…ƒtƒ@ƒCƒ‹‚ğ–³‹
             new Regex(@"^.*\.cache$", RegexOptions.IgnoreCase),
             
-            // ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ç„¡è¦–
+            // ƒoƒbƒNƒAƒbƒvƒtƒ@ƒCƒ‹‚ğ–³‹
             new Regex(@"^.*~$", RegexOptions.IgnoreCase),
             new Regex(@"^.*\.bak$", RegexOptions.IgnoreCase),
             
-            // ãƒ­ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ç„¡è¦–
+            // ƒƒOƒtƒ@ƒCƒ‹‚ğ–³‹
             new Regex(@"^.*\.log$", RegexOptions.IgnoreCase),
             
-            // NuGetãƒ‘ãƒƒã‚±ãƒ¼ã‚¸ã‚’ç„¡è¦–
+            // NuGetƒpƒbƒP[ƒW‚ğ–³‹
             new Regex(@"^(?:.+/)?packages(?:/.*)?$", RegexOptions.IgnoreCase),
             
-            // npmãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã‚’ç„¡è¦–
+            // npmƒ‚ƒWƒ…[ƒ‹‚ğ–³‹
             new Regex(@"^(?:.+/)?node_modules(?:/.*)?$", RegexOptions.IgnoreCase)
         };
 
