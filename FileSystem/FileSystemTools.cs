@@ -16,7 +16,7 @@ public static partial class FileSystemTools
          Description(
          "Edits a file by replacing or inserting content at specific line positions. For full file replacement, use lineNumber=1 and set linesToDelete to the total number of lines in the file.")]
     public static void EditFile(
-        [Description("The path to the file to edit")] string path,
+        [Description("The path to the file to edit")] string filePath,
         [Description("The 1-based line number where the edit should start. Use 1 to start from the beginning of the file.")]
         int lineNumber,
         [Description("The number of lines to delete from the start line. Set to the total line count for complete file replacement, or 0 for pure insertion without deletion.")]
@@ -24,16 +24,16 @@ public static partial class FileSystemTools
         [Description("The text content to insert at the specified position. For full file replacement, provide the entire new content.")]
         string content)
     {
-        Security.ValidateIsAllowedDirectory(path);
+        Security.ValidateIsAllowedDirectory(filePath);
 
-        var lines = File.ReadAllLines(path);
+        var lines = File.ReadAllLines(filePath);
 
         var newLinesList = new List<string>();
         newLinesList.AddRange(lines.Take(lineNumber - 1));
         newLinesList.AddRange(content.Split(["\r\n", "\r", "\n"], StringSplitOptions.None));
         newLinesList.AddRange(lines.Skip(lineNumber - 1 + linesToDelete));
 
-        File.WriteAllLines(path, newLinesList);
+        File.WriteAllLines(filePath, newLinesList);
     }
 
     [McpServerTool, Description("Gets file information including path, line count, and content.")]
@@ -71,22 +71,22 @@ public static partial class FileSystemTools
 
     [McpServerTool, Description("Deletes a file or directory from the file system.")]
     public static void Delete(
-        [Description("The full path of the file or directory to delete.")] string path,
+        [Description("The full path of the file or directory to delete.")] string fullPath,
         [Description("Whether to delete all contents inside a directory. Ignored for files. Default is false.")] bool recursive = false)
     {
-        Security.ValidateIsAllowedDirectory(path);
+        Security.ValidateIsAllowedDirectory(fullPath);
 
-        if (File.Exists(path))
+        if (File.Exists(fullPath))
         {
-            File.Delete(path);
+            File.Delete(fullPath);
         }
-        else if (Directory.Exists(path))
+        else if (Directory.Exists(fullPath))
         {
-            Directory.Delete(path, recursive);
+            Directory.Delete(fullPath, recursive);
         }
         else
         {
-            throw new FileNotFoundException($"No file or directory found at path: {path}");
+            throw new FileNotFoundException($"No file or directory found at path: {fullPath}");
         }
     }
 
