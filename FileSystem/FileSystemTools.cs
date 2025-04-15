@@ -1,16 +1,18 @@
 using ModelContextProtocol.Server;
 using System.ComponentModel;
+using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace FileSystem.Tools;
 
 [McpServerToolType]
-public static class FileSystemTools
+public static partial class FileSystemTools
 {
     [McpServerTool,
          Description(
          "Edits a file by replacing or inserting content at specific line positions. For full file replacement, use lineNumber=1 and set linesToDelete to the total number of lines in the file.")]
-    public static async Task EditFile(
+    public static void EditFile(
         [Description("The path to the file to edit")] string path,
         [Description("The 1-based line number where the edit should start. Use 1 to start from the beginning of the file.")]
         int lineNumber,
@@ -19,71 +21,16 @@ public static class FileSystemTools
         [Description("The text content to insert at the specified position. For full file replacement, provide the entire new content.")]
         string content)
     {
-        try
-        {
-            Security.ValidateIsAllowedDirectory(path);
-            string[] lines = await File.ReadAllLinesAsync(path);
-            ValidateEditParameters(lines, lineNumber, linesToDelete);
-            string[] contentLines = SplitContentIntoLines(content);
-            string[] newLines = CreateNewLines(lines, lineNumber, linesToDelete, contentLines);
-            await File.WriteAllLinesAsync(path, newLines);
-        }
-        catch (Exception ex) when (ex is not ArgumentException)
-        {
-            throw new IOException($"Failed to edit file {path}", ex);
-        }
-    }
+        Security.ValidateIsAllowedDirectory(path);
 
-    private static string[] CreateNewLines(string[] lines, int lineNumber, int linesToDelete, string[] contentLines)
-    {
-        // 適切な削除行数を計算
-        if (lineNumber + linesToDelete - 1 > lines.Length)
-        {
-            linesToDelete = lines.Length - lineNumber + 1;
-        }
-
-        // Listを使用して動的に行を追加する方が効率的
-        List<string> newLinesList = new List<string>(lines.Length + contentLines.Length - linesToDelete);
-
-        // 1. 編集位置より前の行を追加
+        var lines = File.ReadAllLines(path);
+        
+        var newLinesList = new List<string>();
         newLinesList.AddRange(lines.Take(lineNumber - 1));
-
-        // 2. 新しいコンテンツを追加
-        newLinesList.AddRange(contentLines);
-
-        // 3. 削除した行の後の残りの行を追加
-        if (lineNumber - 1 + linesToDelete < lines.Length)
-        {
-            newLinesList.AddRange(lines.Skip(lineNumber - 1 + linesToDelete));
-        }
-
-        return newLinesList.ToArray();
-    }
-
-    private static string[] SplitContentIntoLines(string content)
-    {
-        return string.IsNullOrEmpty(content)
-                   ? Array.Empty<string>()
-                   : content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-    }
-
-    private static void ValidateEditParameters(string[] lines, int lineNumber, int linesToDelete)
-    {
-        if (lineNumber > lines.Length + 1)
-        {
-            throw new ArgumentException($"Line number {lineNumber} is out of range. File has {lines.Length} lines.");
-        }
-        if (linesToDelete < 0)
-        {
-            throw new ArgumentException("Lines to delete must be at least 0", nameof(linesToDelete));
-        }
-    }
-
-    private class FileInfo
-    {
-        public string FilePath { get; set; } = string.Empty;
-        public int LineCount { get; set; }
-        public string Content { get; set; } = string.Empty;
+        newLinesList.AddRange(content.Split(["\r\n", "\r", "\n"], StringSplitOptions.None));
+        newLinesList.AddRange(lines.Skip(lineNumber - 1 + linesToDelete));
+        
+        File.WriteAllLines(path, newLinesList.ToArray());
     }
 
     [McpServerTool, Description("Gets file information including path, line count, and content.")]
@@ -91,24 +38,25 @@ public static class FileSystemTools
     {
         Security.ValidateIsAllowedDirectory(filePath);
 
-        try
-        {
-            var content = File.ReadAllText(filePath);
-            var lineCount = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None).Length;
+        return JsonSerializer.Serialize(new FileInfo(filePath), new JsonSerializerOptions { WriteIndented = true });
+    }
 
-            var fileInfo = new FileInfo
-            {
-                FilePath = filePath,
-                LineCount = lineCount,
-                Content = content
-            };
+    [McpServerTool, Description("Retrieves the hierarchical folder structure in YAML format from a specified directory path.")]
+    public static string GetFolderStructure(
+        [Description("Absolute path to the root directory whose folder structure should be retrieved.")] string fullPath,
+        [Description("Specifies whether to include subdirectories recursively in the folder structure. If set to true, the function will traverse through all nested directories. If false, only the immediate children of the root directory will be included.")] bool recursive = true)
+    {
+        Security.ValidateIsAllowedDirectory(fullPath);
 
-            return JsonSerializer.Serialize(fileInfo, new JsonSerializerOptions { WriteIndented = true });
-        }
-        catch (Exception ex)
-        {
-            throw new IOException($"Failed to read file information from {filePath}", ex);
-        }
+        var ignorePatterns = GitIgnoreParser.LoadIgnorePatterns(fullPath);
+        var sb = new StringBuilder();
+
+        var rootName = Path.GetFileName(fullPath);
+        sb.AppendLine($"{rootName}:");
+
+        TraverseDirectoryYaml(fullPath, sb, "  ", ignorePatterns, fullPath, recursive);
+
+        return sb.ToString();
     }
 
     [McpServerTool, Description("Deletes a file or directory from the file system.")]
@@ -131,4 +79,77 @@ public static class FileSystemTools
             throw new FileNotFoundException($"No file or directory found at path: {path}");
         }
     }
+
+    #region private methods
+
+    private static void TraverseDirectoryYaml(
+        string path,
+        StringBuilder sb,
+        string indent,
+        List<Regex> ignorePatterns,
+        string rootPath,
+        bool recursive)
+    {
+        // Get filtered files and directories
+        var (filteredFiles, filteredDirs) = GetFilteredItems(path, ignorePatterns, rootPath);
+
+        // Output files
+        foreach (var file in filteredFiles)
+        {
+            sb.AppendLine($"{indent}- {Path.GetFileName(file)}");
+        }
+
+        // Output and process directories
+        foreach (var dir in filteredDirs)
+        {
+            var dirName = Path.GetFileName(dir);
+            sb.AppendLine($"{indent}{dirName}:");
+
+            if (!recursive) continue;
+
+            // Handle .gitignore in subdirectory
+            var childIgnorePatterns = new List<Regex>(ignorePatterns);
+            string gitignorePath = Path.Combine(dir, ".gitignore");
+            if (File.Exists(gitignorePath))
+            {
+                childIgnorePatterns.AddRange(GitIgnoreParser.ParseGitIgnore(gitignorePath, dir, rootPath));
+            }
+
+            TraverseDirectoryYaml(
+                dir,
+                sb,
+                indent + "  ",
+                childIgnorePatterns,
+                rootPath,
+                recursive
+            );
+        }
+    }
+
+    // Helper method to extract common functionality
+    private static (string[] files, string[] dirs) GetFilteredItems(string path, List<Regex> ignorePatterns, string rootPath)
+    {
+        // Check if the current directory should be ignored
+        string relativePath = Path.GetRelativePath(rootPath, path).Replace("\\", "/");
+        if (path != rootPath && GitIgnoreParser.IsIgnored(relativePath, ignorePatterns))
+            return (Array.Empty<string>(), Array.Empty<string>());
+
+        // Get and filter files and directories
+        var files = Directory.GetFiles(path);
+        var directories = Directory.GetDirectories(path);
+
+        var filteredFiles = files
+            .Where(file => !GitIgnoreParser.IsIgnored(Path.GetRelativePath(rootPath, file).Replace("\\", "/"), ignorePatterns))
+            .OrderBy(file => Path.GetFileName(file))
+            .ToArray();
+
+        var filteredDirs = directories
+            .Where(dir => !GitIgnoreParser.IsIgnored(Path.GetRelativePath(rootPath, dir).Replace("\\", "/"), ignorePatterns))
+            .OrderBy(dir => Path.GetFileName(dir))
+            .ToArray();
+
+        return (filteredFiles, filteredDirs);
+    }
+
+    #endregion
 }
