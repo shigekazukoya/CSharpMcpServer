@@ -10,8 +10,7 @@ namespace FileSystem.Tools;
 public static partial class FileSystemTools
 {
     [McpServerTool,
-         Description(
-         "Edits a file by replacing or inserting content at specific line positions. For full file replacement, use lineNumber=1 and set linesToDelete to the total number of lines in the file.")]
+        Description("Edits a file by deleting a specified number of lines starting from a specific line position and then inserting new content at that position. For full file replacement, use lineNumber=1 and set linesToDelete to the total number of lines in the file.")]
     public static void EditFile(
         [Description("The path to the file to edit")] string filePath,
         [Description("The 1-based line number where the edit should start. Use 1 to start from the beginning of the file.")]

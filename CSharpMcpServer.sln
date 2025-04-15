@@ -7,6 +7,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSystem", "FileSystem\Fi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Time", "Time\Time.csproj", "{D16A6FF0-64AE-44ED-9809-A347BC10027A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebFetch", "WebFetch\WebFetch.csproj", "{CE36290B-C91F-42A9-9F51-496230908F35}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ソリューション項目", "ソリューション項目", "{61CB45F7-7447-410E-934E-3B040F21D5B9}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +28,10 @@ Global
 		{D16A6FF0-64AE-44ED-9809-A347BC10027A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D16A6FF0-64AE-44ED-9809-A347BC10027A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D16A6FF0-64AE-44ED-9809-A347BC10027A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE36290B-C91F-42A9-9F51-496230908F35}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE36290B-C91F-42A9-9F51-496230908F35}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE36290B-C91F-42A9-9F51-496230908F35}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE36290B-C91F-42A9-9F51-496230908F35}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
