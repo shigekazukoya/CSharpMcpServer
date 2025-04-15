@@ -13,6 +13,8 @@ public static class DirectoryStructure
         [Description("Absolute path to the root directory whose folder structure should be retrieved.")] string fullPath,
         [Description("Specifies whether to include subdirectories recursively in the folder structure. If set to true, the function will traverse through all nested directories. If false, only the immediate children of the root directory will be included.")] bool recursive = true)
     {
+        Security.ValidateIsAllowedDirectory(fullPath);
+
         if (!Directory.Exists(fullPath))
             throw new DirectoryNotFoundException($"Directory not found: {fullPath}");
         
