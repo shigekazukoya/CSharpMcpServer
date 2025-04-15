@@ -6,6 +6,9 @@ using System.Text.RegularExpressions;
 
 namespace FileSystem.Tools;
 
+/// <summary>
+/// ファイルシステム関連の操作を提供するツールクラス
+/// </summary>
 [McpServerToolType]
 public static partial class FileSystemTools
 {
@@ -24,13 +27,13 @@ public static partial class FileSystemTools
         Security.ValidateIsAllowedDirectory(path);
 
         var lines = File.ReadAllLines(path);
-        
+
         var newLinesList = new List<string>();
         newLinesList.AddRange(lines.Take(lineNumber - 1));
         newLinesList.AddRange(content.Split(["\r\n", "\r", "\n"], StringSplitOptions.None));
         newLinesList.AddRange(lines.Skip(lineNumber - 1 + linesToDelete));
-        
-        File.WriteAllLines(path, newLinesList.ToArray());
+
+        File.WriteAllLines(path, newLinesList);
     }
 
     [McpServerTool, Description("Gets file information including path, line count, and content.")]
@@ -38,7 +41,14 @@ public static partial class FileSystemTools
     {
         Security.ValidateIsAllowedDirectory(filePath);
 
-        return JsonSerializer.Serialize(new FileInfo(filePath), new JsonSerializerOptions { WriteIndented = true });
+        var fileInfo = new
+        {
+            FilePath = filePath,
+            LineCount = File.ReadAllLines(filePath).Length,
+            Content = File.ReadAllText(filePath)
+        };
+
+        return JsonSerializer.Serialize(fileInfo, new JsonSerializerOptions { WriteIndented = true });
     }
 
     [McpServerTool, Description("Retrieves the hierarchical folder structure in YAML format from a specified directory path.")]
@@ -80,7 +90,7 @@ public static partial class FileSystemTools
         }
     }
 
-    #region private methods
+    #region Private Methods
 
     private static void TraverseDirectoryYaml(
         string path,
@@ -126,29 +136,33 @@ public static partial class FileSystemTools
         }
     }
 
-    // Helper method to extract common functionality
     private static (string[] files, string[] dirs) GetFilteredItems(string path, List<Regex> ignorePatterns, string rootPath)
     {
-        // Check if the current directory should be ignored
-        string relativePath = Path.GetRelativePath(rootPath, path).Replace("\\", "/");
+        string relativePath = GetNormalizedRelativePath(path, rootPath);
         if (path != rootPath && GitIgnoreParser.IsIgnored(relativePath, ignorePatterns))
+        {
             return (Array.Empty<string>(), Array.Empty<string>());
+        }
 
-        // Get and filter files and directories
         var files = Directory.GetFiles(path);
         var directories = Directory.GetDirectories(path);
 
         var filteredFiles = files
-            .Where(file => !GitIgnoreParser.IsIgnored(Path.GetRelativePath(rootPath, file).Replace("\\", "/"), ignorePatterns))
+            .Where(file => !GitIgnoreParser.IsIgnored(GetNormalizedRelativePath(file, rootPath), ignorePatterns))
             .OrderBy(file => Path.GetFileName(file))
             .ToArray();
 
         var filteredDirs = directories
-            .Where(dir => !GitIgnoreParser.IsIgnored(Path.GetRelativePath(rootPath, dir).Replace("\\", "/"), ignorePatterns))
+            .Where(dir => !GitIgnoreParser.IsIgnored(GetNormalizedRelativePath(dir, rootPath), ignorePatterns))
             .OrderBy(dir => Path.GetFileName(dir))
             .ToArray();
 
         return (filteredFiles, filteredDirs);
+    }
+
+    private static string GetNormalizedRelativePath(string path, string rootPath)
+    {
+        return Path.GetRelativePath(rootPath, path).Replace("\\", "/");
     }
 
     #endregion
