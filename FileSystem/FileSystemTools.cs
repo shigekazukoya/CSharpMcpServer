@@ -6,9 +6,6 @@ using System.Text.RegularExpressions;
 
 namespace FileSystem.Tools;
 
-/// <summary>
-/// ファイルシステム関連の操作を提供するツールクラス
-/// </summary>
 [McpServerToolType]
 public static partial class FileSystemTools
 {
@@ -103,13 +100,11 @@ public static partial class FileSystemTools
         // Get filtered files and directories
         var (filteredFiles, filteredDirs) = GetFilteredItems(path, ignorePatterns, rootPath);
 
-        // Output files
         foreach (var file in filteredFiles)
         {
             sb.AppendLine($"{indent}- {Path.GetFileName(file)}");
         }
 
-        // Output and process directories
         foreach (var dir in filteredDirs)
         {
             var dirName = Path.GetFileName(dir);
