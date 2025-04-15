@@ -16,9 +16,9 @@ public static partial class FileSystemTools
         [Description("The path to the file to edit")] string filePath,
         [Description("The 1-based line number where the edit should start. Use 1 to start from the beginning of the file.")]
         int lineNumber,
-        [Description("The number of lines to delete from the start line. Set to the total line count for complete file replacement, or 0 for pure insertion without deletion.")]
+        [Description("The number of lines to delete starting from the line specified by lineNumber. For complete file replacement, set lineNumber=1 and set this parameter to the total number of lines in the file. Set to 0 for insertion without deleting any existing lines.")]
         int linesToDelete,
-        [Description("The text content to insert at the specified position. For full file replacement, provide the entire new content.")]
+        [Description("The text content to insert at the specified position after the deletion operation. For full file replacement, provide the entire new content.")]
         string content)
     {
         Security.ValidateIsAllowedDirectory(filePath);
