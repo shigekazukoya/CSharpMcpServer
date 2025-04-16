@@ -112,38 +112,43 @@ public static class HardwareInfoRetrieverTools
             sb.AppendLine($"    error: '{ex.Message}'");
         }
 
-        // USB機器一覧
-        sb.AppendLine("  usb_devices:");
+        return sb.ToString();
+    }
+    
+    [McpServerTool, Description("ネットワーク情報を取得します")]
+    public static string GetNetworkInfo()
+    {
+        var sb = new StringBuilder();
+        
+        // YAMLフォーマットで出力
+        sb.AppendLine("network_info:");
+        
+        // ネットワークアダプター
+        sb.AppendLine("  adapters:");
         try
         {
-            using var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_USBControllerDevice");
-            var usbDevices = new List<string>();
-            
-            foreach (var obj in searcher.Get())
+            GetNetworkInterfaceList(sb);
+        }
+        catch (Exception ex)
+        {
+            sb.AppendLine($"    error: '{ex.Message}'");
+        }
+        
+        // TCP接続情報
+        sb.AppendLine("  tcp_connections:");
+        try
+        {
+            var tcpConnections = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections();
+            foreach (var connection in tcpConnections.Take(20)) // 接続数が多すぎる場合は制限
             {
-                string deviceId = obj["Dependent"].ToString();
-                if (!string.IsNullOrEmpty(deviceId))
-                {
-                    // デバイスIDから「DeviceID="」と末尾の「"」を削除
-                    deviceId = deviceId.Substring(deviceId.IndexOf("DeviceID=\"") + 10);
-                    deviceId = deviceId.Substring(0, deviceId.Length - 1);
-                    
-                    // デバイス情報を取得
-                    using var deviceSearcher = new ManagementObjectSearcher($"SELECT * FROM Win32_PnPEntity WHERE DeviceID='{deviceId.Replace("\\", "\\\\")}'");
-                    foreach (var device in deviceSearcher.Get())
-                    {
-                        if (device["Name"] != null)
-                        {
-                            usbDevices.Add($"    - name: '{device["Name"]}'");
-                        }
-                    }
-                }
+                sb.AppendLine($"    - local: '{connection.LocalEndPoint}'");
+                sb.AppendLine($"      remote: '{connection.RemoteEndPoint}'");
+                sb.AppendLine($"      state: '{connection.State}'");
             }
             
-            // 重複を除去してアルファベット順にソート
-            foreach (var device in usbDevices.Distinct().OrderBy(d => d))
+            if (tcpConnections.Length > 20)
             {
-                sb.AppendLine(device);
+                sb.AppendLine($"    - note: '{tcpConnections.Length - 20} more connections not shown'");
             }
         }
         catch (Exception ex)
@@ -151,61 +156,33 @@ public static class HardwareInfoRetrieverTools
             sb.AppendLine($"    error: '{ex.Message}'");
         }
 
-        // ネットワークインターフェース一覧
-        sb.AppendLine("  network:");
-        
-        // ネットワークアダプター
-        sb.AppendLine("    adapters:");
-        try
-        {
-            foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
-            {
-                // 有効なインターフェースのみ表示
-                if (nic.OperationalStatus == OperationalStatus.Up)
-                {
-                    var ipProps = nic.GetIPProperties();
-                    var ipv4Addresses = ipProps.UnicastAddresses
-                        .Where(a => a.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                        .Select(a => a.Address.ToString())
-                        .ToList();
-                    
-                    sb.AppendLine($"      - name: '{nic.Name}'");
-                    sb.AppendLine($"        description: '{nic.Description}'");
-                    sb.AppendLine($"        type: '{nic.NetworkInterfaceType}'");
-                    sb.AppendLine($"        speed: {Math.Round(nic.Speed / 1000000.0, 2)} Mbps");
-                    sb.AppendLine($"        mac_address: '{nic.GetPhysicalAddress()}'");
-                    sb.AppendLine($"        ipv4_addresses: [{string.Join(", ", ipv4Addresses)}]");
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            sb.AppendLine($"        error: '{ex.Message}'");
-        }
-        
-        // TCP接続情報
-        sb.AppendLine("    tcp_connections:");
-        try
-        {
-            var tcpConnections = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections();
-            foreach (var connection in tcpConnections.Take(20)) // 接続数が多すぎる場合は制限
-            {
-                sb.AppendLine($"      - local: '{connection.LocalEndPoint}'");
-                sb.AppendLine($"        remote: '{connection.RemoteEndPoint}'");
-                sb.AppendLine($"        state: '{connection.State}'");
-            }
-            
-            if (tcpConnections.Length > 20)
-            {
-                sb.AppendLine($"      - note: '{tcpConnections.Length - 20} more connections not shown'");
-            }
-        }
-        catch (Exception ex)
-        {
-            sb.AppendLine($"        error: '{ex.Message}'");
-        }
-
         return sb.ToString();
     }
+    
+    /// <summary>
+    /// ネットワークインターフェース一覧を取得して出力する
+    /// </summary>
+    /// <param name="sb">出力先のStringBuilder</param>
+    private static void GetNetworkInterfaceList(StringBuilder sb)
+    {
+        foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
+        {
+            // 有効なインターフェースのみ表示
+            if (nic.OperationalStatus == OperationalStatus.Up)
+            {
+                var ipProps = nic.GetIPProperties();
+                var ipv4Addresses = ipProps.UnicastAddresses
+                    .Where(a => a.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    .Select(a => a.Address.ToString())
+                    .ToList();
+                
+                sb.AppendLine($"    - name: '{nic.Name}'");
+                sb.AppendLine($"      description: '{nic.Description}'");
+                sb.AppendLine($"      type: '{nic.NetworkInterfaceType}'");
+                sb.AppendLine($"      speed: {Math.Round(nic.Speed / 1000000.0, 2)} Mbps");
+                sb.AppendLine($"      mac_address: '{nic.GetPhysicalAddress()}'");
+                sb.AppendLine($"      ipv4_addresses: [{string.Join(", ", ipv4Addresses)}]");
+            }
+        }
+    }
 }
-
