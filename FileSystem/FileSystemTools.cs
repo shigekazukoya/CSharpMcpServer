@@ -36,12 +36,14 @@ public static partial class FileSystemTools
     public static string GetFileInfo([Description("The full path to the file to be read.")] string filePath)
     {
         Security.ValidateIsAllowedDirectory(filePath);
+        var content = File.ReadAllText(filePath);
 
         var fileInfo = new
         {
             FilePath = filePath,
+            Content = content,
+            NewLine = DetectNewline(filePath),
             LineCount = File.ReadAllLines(filePath).Length,
-            Content = File.ReadAllText(filePath)
         };
 
         return JsonSerializer.Serialize(fileInfo, new JsonSerializerOptions { WriteIndented = true });
@@ -157,6 +159,19 @@ public static partial class FileSystemTools
     private static string GetNormalizedRelativePath(string path, string rootPath)
     {
         return Path.GetRelativePath(rootPath, path).Replace("\\", "/");
+    }
+
+    private static string DetectNewline(string text)
+    {
+        // —Dæ‡: \r\n > \n > \r
+        if (text.Contains("\r\n"))
+            return "CRLF (\\r\\n)";
+        else if (text.Contains("\n"))
+            return "LF (\\n)";
+        else if (text.Contains("\r"))
+            return "CR (\\r)";
+        else
+            return "No newline detected";
     }
 
     #endregion
