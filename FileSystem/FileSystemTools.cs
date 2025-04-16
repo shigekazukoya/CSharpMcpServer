@@ -9,56 +9,55 @@ namespace FileSystem.Tools;
 [McpServerToolType]
 public static partial class FileSystemTools
 {
-    private class EditFileResult
-    {
-        public string FilePath { get; set; } = "";
-        public int OriginalLineCount { get; set; }
-        public int NewLineCount { get; set; }
-        public int LineDifference { get; set; }
-        public int EditStartLine { get; set; }
-        public int EditEndLine { get; set; }
-        public string Message { get; set; } = "";
-    }
-
     [McpServerTool,
-        Description("Edits a file by deleting a specified number of lines starting from a specific line position and then inserting new content at that position. For full file replacement, use lineNumber=1 and set linesToDelete to the total number of lines in the file. When executing EditFile multiple times, be aware that line numbers change after each edit. The result object provides information about the new line count and other edit statistics.")]
-    public static string EditFile(
+        Description("Edits a file by finding and replacing text patterns using regular expressions. This allows for more flexible editing than line-based operations. The result object provides information about the changes made.")]
+    public static void EditFile(
         [Description("The path to the file to edit")] string filePath,
-        [Description("The 1-based line number where the edit should start. Use 1 to start from the beginning of the file.")] 
-        int lineNumber,
-        [Description("The number of lines to delete starting from the line specified by lineNumber. For complete file replacement, set lineNumber=1 and set this parameter to the total number of lines in the file. Set to 0 for insertion without deleting any existing lines.")] 
-        int linesToDelete,
-        [Description("The text content to insert at the specified position after the deletion operation. For full file replacement, provide the entire new content.")] 
-        string content)
+        [Description("The regular expression pattern to search for in the file")] 
+        string pattern,
+        [Description("The replacement text. Can include regex capture group references like $1, $2, etc.")] 
+        string replacement,
+        [Description("Optional: Set to true to replace all occurrences of the pattern. Set to false to replace only the first occurrence. Default is true.")] 
+        bool replaceAll = true)
     {
         Security.ValidateIsAllowedDirectory(filePath);
 
-        var result = new EditFileResult
+        string content = File.ReadAllText(filePath);
+        string[] originalLines = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+
+        // Create regex with options for multiline matching
+        var regex = new Regex(pattern, RegexOptions.Multiline);
+        var matches = regex.Matches(content);
+
+        if (matches.Count > 0)
         {
-            FilePath = filePath,
-            EditStartLine = lineNumber,
-        };
+            // Perform replacement based on the replaceAll parameter
+            string newContent;
+            if (replaceAll)
+            {
+                newContent = regex.Replace(content, replacement);
+            }
+            else
+            {
+                newContent = regex.Replace(content, replacement, 1);
+            }
 
-        var lines = File.ReadAllLines(filePath);
-        result.OriginalLineCount = lines.Length;
+            // Calculate line information after modification
+            string[] newLines = newContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
-        var newLinesList = new List<string>();
-        newLinesList.AddRange(lines.Take(lineNumber - 1));
-        
-        var contentLines = content.Split(["\r\n", "\r", "\n"], StringSplitOptions.None);
-        var addLineLength = contentLines.Length;
-        newLinesList.AddRange(contentLines);
-        
-        newLinesList.AddRange(lines.Skip(lineNumber - 1 + linesToDelete));
+            // Rough approximation of edit start/end lines
+            // Find the first match position and determine line
+            if (matches.Count > 0)
+            {
+                int firstMatchPos = matches[0].Index;
+                int lastMatchPos = replaceAll && matches.Count > 1 ? 
+                    matches[matches.Count - 1].Index + matches[matches.Count - 1].Length : 
+                    firstMatchPos + matches[0].Length;
+            }
 
-        File.WriteAllLines(filePath, newLinesList);
-        
-        result.NewLineCount = newLinesList.Count;
-        result.LineDifference = result.NewLineCount - result.OriginalLineCount;
-        result.EditEndLine = lineNumber + addLineLength - 1;
-        result.Message = $"File edited. Deleted {linesToDelete} lines and added {addLineLength} lines. Line count change: {result.LineDifference} lines.";
-
-        return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
+            // Write the modified content to the file
+            File.WriteAllText(filePath, newContent);
+        }
     }
 
     [McpServerTool, 
@@ -69,25 +68,12 @@ public static partial class FileSystemTools
         var content = File.ReadAllText(filePath);
         var lines = File.ReadAllLines(filePath);
 
-        // Generate line number guide (display up to 10 lines)
-        var lineGuide = new List<object>();
-        int maxLinesToShow = Math.Min(lines.Length, 10);
-        for (int i = 0; i < maxLinesToShow; i++)
-        {
-            lineGuide.Add(new { 
-                LineNumber = i + 1, 
-                Content = lines[i].Length > 50 ? lines[i].Substring(0, 47) + "..." : lines[i]
-            });
-        }
-
         var fileInfo = new
         {
             FilePath = filePath,
             Content = content,
             NewLine = DetectNewline(content),
             LineCount = lines.Length,
-            ContentPreview = content.Length > 200 ? content.Substring(0, 197) + "..." : content,
-            LineGuide = lineGuide,
         };
 
         return JsonSerializer.Serialize(fileInfo, new JsonSerializerOptions { WriteIndented = true });
