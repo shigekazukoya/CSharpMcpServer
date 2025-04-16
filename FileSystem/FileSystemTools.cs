@@ -10,20 +10,45 @@ namespace FileSystem.Tools;
 public static partial class FileSystemTools
 {
     [McpServerTool,
-        Description("Edits a file by finding and replacing text patterns using regular expressions. This allows for more flexible editing than line-based operations. The result object provides information about the changes made.")]
+        Description("Edits a file by finding and replacing text patterns using regular expressions or writing new content. Allows for flexible file editing including complete file replacement.")]
     public static void EditFile(
-        [Description("The path to the file to edit")] string filePath,
-        [Description("The regular expression pattern to search for in the file")] 
+        [Description("The path to the file to edit or create")] string filePath,
+        [Description("The regular expression pattern to search for in the file. Use '.*' to match all content for full file replacement.")]
         string pattern,
-        [Description("The replacement text. Can include regex capture group references like $1, $2, etc.")] 
+        [Description("The replacement text. Can include regex capture group references like $1, $2, etc. For full file replacement, simply provide the new content.")]
         string replacement,
-        [Description("Optional: Set to true to replace all occurrences of the pattern. Set to false to replace only the first occurrence. Default is true.")] 
+        [Description("Optional: Set to true to replace all occurrences of the pattern. Set to false to replace only the first occurrence. Default is true.")]
         bool replaceAll = true)
     {
         Security.ValidateIsAllowedDirectory(filePath);
 
+        // Check if file exists
+        bool fileExists = File.Exists(filePath);
+
+        // For full file replacement pattern, create the file if it doesn't exist
+        if (pattern == ".*" || pattern == "^.*$" || pattern == "^[\\s\\S]*$")
+        {
+            // Create directory if it doesn't exist
+            string directory = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            // Write the content directly to the file
+            File.WriteAllText(filePath, replacement);
+            return;
+        }
+
+        // If we're using a specific pattern and the file doesn't exist, throw an error
+        if (!fileExists)
+        {
+            throw new FileNotFoundException($"File not found: {filePath}");
+        }
+
+        // Read the existing file content
         string content = File.ReadAllText(filePath);
-        string[] originalLines = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+        string[] originalLines = content.Split(new[] { "\\r\\n", "\\r", "\\n" }, StringSplitOptions.None);
 
         // Create regex with options for multiline matching
         var regex = new Regex(pattern, RegexOptions.Multiline);
@@ -43,24 +68,29 @@ public static partial class FileSystemTools
             }
 
             // Calculate line information after modification
-            string[] newLines = newContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            string[] newLines = newContent.Split(new[] { "\\r\\n", "\\r", "\\n" }, StringSplitOptions.None);
 
             // Rough approximation of edit start/end lines
             // Find the first match position and determine line
             if (matches.Count > 0)
             {
                 int firstMatchPos = matches[0].Index;
-                int lastMatchPos = replaceAll && matches.Count > 1 ? 
-                    matches[matches.Count - 1].Index + matches[matches.Count - 1].Length : 
+                int lastMatchPos = replaceAll && matches.Count > 1 ?
+                    matches[matches.Count - 1].Index + matches[matches.Count - 1].Length :
                     firstMatchPos + matches[0].Length;
             }
 
             // Write the modified content to the file
             File.WriteAllText(filePath, newContent);
         }
+        else
+        {
+            // If no matching pattern was found, exit without changes
+            // Logs or error messages can be added here if needed
+        }
     }
 
-    [McpServerTool, 
+    [McpServerTool,
         Description("Gets file information including path, line count, content, and line number guides. Useful when planning line-based edits.")]
     public static string GetFileInfo([Description("The full path to the file to be read.")] string filePath)
     {
