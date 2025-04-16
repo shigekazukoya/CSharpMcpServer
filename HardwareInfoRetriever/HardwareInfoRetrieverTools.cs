@@ -11,178 +11,155 @@ namespace HardwareInfoRetrieverTools;
 public static class HardwareInfoRetrieverTools
 {
     [McpServerTool, Description("ハードウェア情報を取得します")]
-    public static string HardwareInfoRetriever()
-    {
-        var sb = new StringBuilder();
-        
-        // YAMLフォーマットで出力
-        sb.AppendLine("hardware_info:");
-        
-        // OS情報の取得
-        sb.AppendLine("  os:");
-        sb.AppendLine($"    name: '{Environment.OSVersion.VersionString}'");
-        sb.AppendLine($"    platform: '{RuntimeInformation.OSDescription}'");
-        sb.AppendLine($"    is_64bit: {Environment.Is64BitOperatingSystem}");
-        sb.AppendLine($"    machine_name: '{Environment.MachineName}'");
-        sb.AppendLine($"    user_name: '{Environment.UserName}'");
-        sb.AppendLine($"    system_directory: '{Environment.SystemDirectory}'");
-        sb.AppendLine($"    processor_count: {Environment.ProcessorCount}");
+    public static string HardwareInfoRetriever() => 
+        BuildYaml("hardware_info", builder => {
+            // OS情報
+            AppendSection(builder, "os", sb => {
+                sb.AppendLine($"    name: '{Environment.OSVersion.VersionString}'")
+                  .AppendLine($"    platform: '{RuntimeInformation.OSDescription}'")
+                  .AppendLine($"    is_64bit: {Environment.Is64BitOperatingSystem}")
+                  .AppendLine($"    machine_name: '{Environment.MachineName}'")
+                  .AppendLine($"    user_name: '{Environment.UserName}'")
+                  .AppendLine($"    system_directory: '{Environment.SystemDirectory}'")
+                  .AppendLine($"    processor_count: {Environment.ProcessorCount}");
+            });
 
-        // CPU情報
-        sb.AppendLine("  cpu:");
-        try
-        {
-            using var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_Processor");
-            foreach (var obj in searcher.Get())
-            {
-                sb.AppendLine($"    - name: '{obj["Name"]}'");
-                sb.AppendLine($"      manufacturer: '{obj["Manufacturer"]}'");
-                sb.AppendLine($"      cores: {obj["NumberOfCores"]}");
-                sb.AppendLine($"      logical_processors: {obj["NumberOfLogicalProcessors"]}");
-                sb.AppendLine($"      max_clock_speed: {obj["MaxClockSpeed"]} MHz");
-            }
-        }
-        catch (Exception ex)
-        {
-            sb.AppendLine($"    error: '{ex.Message}'");
-        }
+            // CPU情報
+            QueryWmiObjects(builder, "cpu", "Win32_Processor", obj => {
+                builder.AppendLine($"    - name: '{obj["Name"]}'")
+                       .AppendLine($"      manufacturer: '{obj["Manufacturer"]}'")
+                       .AppendLine($"      cores: {obj["NumberOfCores"]}")
+                       .AppendLine($"      logical_processors: {obj["NumberOfLogicalProcessors"]}")
+                       .AppendLine($"      max_clock_speed: {obj["MaxClockSpeed"]} MHz");
+            });
 
-        // GPU情報
-        sb.AppendLine("  gpu:");
-        try
-        {
-            using var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_VideoController");
-            foreach (var obj in searcher.Get())
-            {
-                sb.AppendLine($"    - name: '{obj["Name"]}'");
-                sb.AppendLine($"      driver_version: '{obj["DriverVersion"]}'");
-                sb.AppendLine($"      adapter_ram: {Math.Round(Convert.ToDouble(obj["AdapterRAM"]) / (1024 * 1024 * 1024), 2)} GB");
-                sb.AppendLine($"      video_mode_description: '{obj["VideoModeDescription"]}'");
-            }
-        }
-        catch (Exception ex)
-        {
-            sb.AppendLine($"    error: '{ex.Message}'");
-        }
+            // GPU情報
+            QueryWmiObjects(builder, "gpu", "Win32_VideoController", obj => {
+                builder.AppendLine($"    - name: '{obj["Name"]}'")
+                       .AppendLine($"      driver_version: '{obj["DriverVersion"]}'")
+                       .AppendLine($"      adapter_ram: {Math.Round(Convert.ToDouble(obj["AdapterRAM"]) / (1024 * 1024 * 1024), 2)} GB")
+                       .AppendLine($"      video_mode_description: '{obj["VideoModeDescription"]}'");
+            });
 
-        // メモリ情報
-        sb.AppendLine("  memory:");
-        try
-        {
-            using var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_PhysicalMemory");
-            var totalMemory = 0.0;
-            var memoryDevices = new List<string>();
-            
-            foreach (var obj in searcher.Get())
-            {
-                double capacity = Convert.ToDouble(obj["Capacity"]) / (1024 * 1024 * 1024);
-                totalMemory += capacity;
-                memoryDevices.Add($"      - type: '{obj["MemoryType"]}', capacity: {Math.Round(capacity, 2)} GB, manufacturer: '{obj["Manufacturer"]}'");
-            }
-            
-            sb.AppendLine($"    total: {Math.Round(totalMemory, 2)} GB");
-            sb.AppendLine("    devices:");
-            foreach (var device in memoryDevices)
-            {
-                sb.AppendLine(device);
-            }
-        }
-        catch (Exception ex)
-        {
-            sb.AppendLine($"    error: '{ex.Message}'");
-        }
+            // メモリ情報
+            AppendSection(builder, "memory", sb => {
+                try {
+                    using var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_PhysicalMemory");
+                    var totalMemory = 0.0;
+                    var memoryDevices = new List<string>();
+                    
+                    foreach (var obj in searcher.Get()) {
+                        double capacity = Convert.ToDouble(obj["Capacity"]) / (1024 * 1024 * 1024);
+                        totalMemory += capacity;
+                        memoryDevices.Add($"      - type: '{obj["MemoryType"]}', capacity: {Math.Round(capacity, 2)} GB, manufacturer: '{obj["Manufacturer"]}'");
+                    }
+                    
+                    sb.AppendLine($"    total: {Math.Round(totalMemory, 2)} GB")
+                      .AppendLine("    devices:");
+                    
+                    foreach (var device in memoryDevices) {
+                        sb.AppendLine(device);
+                    }
+                }
+                catch (Exception ex) {
+                    sb.AppendLine($"    error: '{ex.Message}'");
+                }
+            });
 
-        // ディスク容量
-        sb.AppendLine("  disks:");
-        try
-        {
-            foreach (var drive in DriveInfo.GetDrives().Where(d => d.IsReady))
-            {
-                sb.AppendLine($"    - name: '{drive.Name}'");
-                sb.AppendLine($"      label: '{drive.VolumeLabel}'");
-                sb.AppendLine($"      type: '{drive.DriveType}'");
-                sb.AppendLine($"      format: '{drive.DriveFormat}'");
-                sb.AppendLine($"      total_size: {Math.Round(drive.TotalSize / (1024.0 * 1024 * 1024), 2)} GB");
-                sb.AppendLine($"      free_space: {Math.Round(drive.AvailableFreeSpace / (1024.0 * 1024 * 1024), 2)} GB");
-                sb.AppendLine($"      used_space: {Math.Round((drive.TotalSize - drive.AvailableFreeSpace) / (1024.0 * 1024 * 1024), 2)} GB");
-            }
-        }
-        catch (Exception ex)
-        {
-            sb.AppendLine($"    error: '{ex.Message}'");
-        }
-
-        return sb.ToString();
-    }
+            // ディスク容量
+            AppendSection(builder, "disks", sb => {
+                try {
+                    foreach (var drive in DriveInfo.GetDrives().Where(d => d.IsReady)) {
+                        sb.AppendLine($"    - name: '{drive.Name}'")
+                          .AppendLine($"      label: '{drive.VolumeLabel}'")
+                          .AppendLine($"      type: '{drive.DriveType}'")
+                          .AppendLine($"      format: '{drive.DriveFormat}'")
+                          .AppendLine($"      total_size: {Math.Round(drive.TotalSize / (1024.0 * 1024 * 1024), 2)} GB")
+                          .AppendLine($"      free_space: {Math.Round(drive.AvailableFreeSpace / (1024.0 * 1024 * 1024), 2)} GB")
+                          .AppendLine($"      used_space: {Math.Round((drive.TotalSize - drive.AvailableFreeSpace) / (1024.0 * 1024 * 1024), 2)} GB");
+                    }
+                }
+                catch (Exception ex) {
+                    sb.AppendLine($"    error: '{ex.Message}'");
+                }
+            });
+        });
     
     [McpServerTool, Description("ネットワーク情報を取得します")]
-    public static string GetNetworkInfo()
+    public static string GetNetworkInfo() => 
+        BuildYaml("network_info", builder => {
+            // ネットワークアダプター
+            AppendSection(builder, "adapters", sb => {
+                try {
+                    foreach (var nic in NetworkInterface.GetAllNetworkInterfaces().Where(n => n.OperationalStatus == OperationalStatus.Up)) {
+                        var ipProps = nic.GetIPProperties();
+                        var ipv4Addresses = ipProps.UnicastAddresses
+                            .Where(a => a.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                            .Select(a => a.Address.ToString())
+                            .ToList();
+                        
+                        sb.AppendLine($"    - name: '{nic.Name}'")
+                          .AppendLine($"      description: '{nic.Description}'")
+                          .AppendLine($"      type: '{nic.NetworkInterfaceType}'")
+                          .AppendLine($"      speed: {Math.Round(nic.Speed / 1000000.0, 2)} Mbps")
+                          .AppendLine($"      mac_address: '{nic.GetPhysicalAddress()}'")
+                          .AppendLine($"      ipv4_addresses: [{string.Join(", ", ipv4Addresses)}]");
+                    }
+                }
+                catch (Exception ex) {
+                    sb.AppendLine($"    error: '{ex.Message}'");
+                }
+            });
+            
+            // TCP接続情報
+            AppendSection(builder, "tcp_connections", sb => {
+                try {
+                    var tcpConnections = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections();
+                    foreach (var connection in tcpConnections.Take(20)) {
+                        sb.AppendLine($"    - local: '{connection.LocalEndPoint}'")
+                          .AppendLine($"      remote: '{connection.RemoteEndPoint}'")
+                          .AppendLine($"      state: '{connection.State}'");
+                    }
+                    
+                    if (tcpConnections.Length > 20) {
+                        sb.AppendLine($"    - note: '{tcpConnections.Length - 20} more connections not shown'");
+                    }
+                }
+                catch (Exception ex) {
+                    sb.AppendLine($"    error: '{ex.Message}'");
+                }
+            });
+        });
+
+    // YAMLドキュメントを構築するヘルパーメソッド
+    private static string BuildYaml(string rootName, Action<StringBuilder> buildAction)
     {
         var sb = new StringBuilder();
-        
-        // YAMLフォーマットで出力
-        sb.AppendLine("network_info:");
-        
-        // ネットワークアダプター
-        sb.AppendLine("  adapters:");
-        try
-        {
-            GetNetworkInterfaceList(sb);
-        }
-        catch (Exception ex)
-        {
-            sb.AppendLine($"    error: '{ex.Message}'");
-        }
-        
-        // TCP接続情報
-        sb.AppendLine("  tcp_connections:");
-        try
-        {
-            var tcpConnections = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections();
-            foreach (var connection in tcpConnections.Take(20)) // 接続数が多すぎる場合は制限
-            {
-                sb.AppendLine($"    - local: '{connection.LocalEndPoint}'");
-                sb.AppendLine($"      remote: '{connection.RemoteEndPoint}'");
-                sb.AppendLine($"      state: '{connection.State}'");
-            }
-            
-            if (tcpConnections.Length > 20)
-            {
-                sb.AppendLine($"    - note: '{tcpConnections.Length - 20} more connections not shown'");
-            }
-        }
-        catch (Exception ex)
-        {
-            sb.AppendLine($"    error: '{ex.Message}'");
-        }
-
+        sb.AppendLine($"{rootName}:");
+        buildAction(sb);
         return sb.ToString();
     }
-    
-    /// <summary>
-    /// ネットワークインターフェース一覧を取得して出力する
-    /// </summary>
-    /// <param name="sb">出力先のStringBuilder</param>
-    private static void GetNetworkInterfaceList(StringBuilder sb)
+
+    // YAMLセクションを追加するヘルパーメソッド
+    private static void AppendSection(StringBuilder sb, string sectionName, Action<StringBuilder> sectionBuilder)
     {
-        foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
-        {
-            // 有効なインターフェースのみ表示
-            if (nic.OperationalStatus == OperationalStatus.Up)
-            {
-                var ipProps = nic.GetIPProperties();
-                var ipv4Addresses = ipProps.UnicastAddresses
-                    .Where(a => a.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                    .Select(a => a.Address.ToString())
-                    .ToList();
-                
-                sb.AppendLine($"    - name: '{nic.Name}'");
-                sb.AppendLine($"      description: '{nic.Description}'");
-                sb.AppendLine($"      type: '{nic.NetworkInterfaceType}'");
-                sb.AppendLine($"      speed: {Math.Round(nic.Speed / 1000000.0, 2)} Mbps");
-                sb.AppendLine($"      mac_address: '{nic.GetPhysicalAddress()}'");
-                sb.AppendLine($"      ipv4_addresses: [{string.Join(", ", ipv4Addresses)}]");
+        sb.AppendLine($"  {sectionName}:");
+        sectionBuilder(sb);
+    }
+
+    // WMI情報を取得して処理するヘルパーメソッド
+    private static void QueryWmiObjects(StringBuilder sb, string sectionName, string wmiClass, Action<ManagementBaseObject> processObject)
+    {
+        AppendSection(sb, sectionName, sectionSb => {
+            try {
+                using var searcher = new ManagementObjectSearcher($"SELECT * FROM {wmiClass}");
+                foreach (var obj in searcher.Get()) {
+                    processObject(obj);
+                }
             }
-        }
+            catch (Exception ex) {
+                sectionSb.AppendLine($"    error: '{ex.Message}'");
+            }
+        });
     }
 }
