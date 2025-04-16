@@ -10,10 +10,10 @@ namespace HardwareInfoRetrieverTools;
 [McpServerToolType]
 public static class HardwareInfoRetrieverTools
 {
-    [McpServerTool, Description("ハードウェア情報を取得します")]
+    [McpServerTool, Description("Retrieves hardware information")]
     public static string HardwareInfoRetriever() => 
         BuildYaml("hardware_info", builder => {
-            // OS情報
+            // OS information
             AppendSection(builder, "os", sb => {
                 sb.AppendLine($"    name: '{Environment.OSVersion.VersionString}'")
                   .AppendLine($"    platform: '{RuntimeInformation.OSDescription}'")
@@ -24,7 +24,7 @@ public static class HardwareInfoRetrieverTools
                   .AppendLine($"    processor_count: {Environment.ProcessorCount}");
             });
 
-            // CPU情報
+            // CPU information
             QueryWmiObjects(builder, "cpu", "Win32_Processor", obj => {
                 builder.AppendLine($"    - name: '{obj["Name"]}'")
                        .AppendLine($"      manufacturer: '{obj["Manufacturer"]}'")
@@ -33,7 +33,7 @@ public static class HardwareInfoRetrieverTools
                        .AppendLine($"      max_clock_speed: {obj["MaxClockSpeed"]} MHz");
             });
 
-            // GPU情報
+            // GPU information
             QueryWmiObjects(builder, "gpu", "Win32_VideoController", obj => {
                 builder.AppendLine($"    - name: '{obj["Name"]}'")
                        .AppendLine($"      driver_version: '{obj["DriverVersion"]}'")
@@ -41,7 +41,7 @@ public static class HardwareInfoRetrieverTools
                        .AppendLine($"      video_mode_description: '{obj["VideoModeDescription"]}'");
             });
 
-            // メモリ情報
+            // Memory information
             AppendSection(builder, "memory", sb => {
                 try {
                     using var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_PhysicalMemory");
@@ -66,7 +66,7 @@ public static class HardwareInfoRetrieverTools
                 }
             });
 
-            // ディスク容量
+            // Disk capacity
             AppendSection(builder, "disks", sb => {
                 try {
                     foreach (var drive in DriveInfo.GetDrives().Where(d => d.IsReady)) {
@@ -85,10 +85,10 @@ public static class HardwareInfoRetrieverTools
             });
         });
     
-    [McpServerTool, Description("ネットワーク情報を取得します")]
+    [McpServerTool, Description("Retrieves network information")]
     public static string GetNetworkInfo() => 
         BuildYaml("network_info", builder => {
-            // ネットワークアダプター
+            // Network adapters
             AppendSection(builder, "adapters", sb => {
                 try {
                     foreach (var nic in NetworkInterface.GetAllNetworkInterfaces().Where(n => n.OperationalStatus == OperationalStatus.Up)) {
@@ -111,7 +111,7 @@ public static class HardwareInfoRetrieverTools
                 }
             });
             
-            // TCP接続情報
+            // TCP connection information
             AppendSection(builder, "tcp_connections", sb => {
                 try {
                     var tcpConnections = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections();
@@ -131,7 +131,7 @@ public static class HardwareInfoRetrieverTools
             });
         });
 
-    // YAMLドキュメントを構築するヘルパーメソッド
+    // Helper method to build YAML document
     private static string BuildYaml(string rootName, Action<StringBuilder> buildAction)
     {
         var sb = new StringBuilder();
@@ -140,14 +140,14 @@ public static class HardwareInfoRetrieverTools
         return sb.ToString();
     }
 
-    // YAMLセクションを追加するヘルパーメソッド
+    // Helper method to add YAML section
     private static void AppendSection(StringBuilder sb, string sectionName, Action<StringBuilder> sectionBuilder)
     {
         sb.AppendLine($"  {sectionName}:");
         sectionBuilder(sb);
     }
 
-    // WMI情報を取得して処理するヘルパーメソッド
+    // Helper method to retrieve and process WMI information
     private static void QueryWmiObjects(StringBuilder sb, string sectionName, string wmiClass, Action<ManagementBaseObject> processObject)
     {
         AppendSection(sb, sectionName, sectionSb => {
