@@ -9,104 +9,102 @@ namespace FileSystem.Tools;
 [McpServerToolType]
 public static partial class FileSystemTools
 {
-    [McpServerTool,
-        Description("Edits a file by finding and replacing text patterns using regular expressions or writing new content. Allows for flexible file editing including complete file replacement.")]
-    public static void EditFile(
-        [Description("The path to the file to edit or create")] string filePath,
-        [Description("The regular expression pattern to search for in the file. Use '.*' to match all content for full file replacement.")]
-        string pattern,
-        [Description("The replacement text. Can include regex capture group references like $1, $2, etc. For full file replacement, simply provide the new content.")]
-        string replacement,
-        [Description("Optional: Set to true to replace all occurrences of the pattern. Set to false to replace only the first occurrence. Default is true.")]
-        bool replaceAll = true)
+    // ファイル処理時のデフォルトエンコーディング
+    private static readonly Encoding DefaultEncoding = Encoding.UTF8;
+
+    // 大容量ファイル処理時の最大サイズ（10MB）
+    private const long MaxFileSize = 10 * 1024 * 1024;
+
+  [McpServerTool,
+        Description("Write File")]
+    public static void WriteFile(
+        [Description("The path to the file to edit")] string filePath,
+        [Description("The content to write to the file")] string content,
+        [Description("The encoding to use (utf-8, shift-jis, etc.). Default is utf-8.")] string encodingName = "utf-8")
     {
-        Security.ValidateIsAllowedDirectory(filePath);
-
-        // Check if file exists
-        bool fileExists = File.Exists(filePath);
-
-        // For full file replacement pattern, create the file if it doesn't exist
-        if (pattern == ".*" || pattern == "^.*$" || pattern == "^[\\s\\S]*$")
+        try
         {
-            // Create directory if it doesn't exist
-            string directory = Path.GetDirectoryName(filePath);
-            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
-            // Write the content directly to the file
-            File.WriteAllText(filePath, replacement);
-            return;
+            Security.ValidateIsAllowedDirectory(filePath);
+            
+            // エンコーディングの解決
+            Encoding encoding = ResolveEncoding(encodingName);
+            
+            File.WriteAllText(filePath, content, encoding);
         }
-
-        // If we're using a specific pattern and the file doesn't exist, throw an error
-        if (!fileExists)
+        catch (Exception ex)
         {
-            throw new FileNotFoundException($"File not found: {filePath}");
-        }
-
-        // Read the existing file content
-        string content = File.ReadAllText(filePath);
-        string[] originalLines = content.Split(new[] { "\\r\\n", "\\r", "\\n" }, StringSplitOptions.None);
-
-        // Create regex with options for multiline matching
-        var regex = new Regex(pattern, RegexOptions.Multiline);
-        var matches = regex.Matches(content);
-
-        if (matches.Count > 0)
-        {
-            // Perform replacement based on the replaceAll parameter
-            string newContent;
-            if (replaceAll)
-            {
-                newContent = regex.Replace(content, replacement);
-            }
-            else
-            {
-                newContent = regex.Replace(content, replacement, 1);
-            }
-
-            // Calculate line information after modification
-            string[] newLines = newContent.Split(new[] { "\\r\\n", "\\r", "\\n" }, StringSplitOptions.None);
-
-            // Rough approximation of edit start/end lines
-            // Find the first match position and determine line
-            if (matches.Count > 0)
-            {
-                int firstMatchPos = matches[0].Index;
-                int lastMatchPos = replaceAll && matches.Count > 1 ?
-                    matches[matches.Count - 1].Index + matches[matches.Count - 1].Length :
-                    firstMatchPos + matches[0].Length;
-            }
-
-            // Write the modified content to the file
-            File.WriteAllText(filePath, newContent);
-        }
-        else
-        {
-            // If no matching pattern was found, exit without changes
-            // Logs or error messages can be added here if needed
+            throw new IOException($"Failed to write file '{filePath}': {ex.Message}", ex);
         }
     }
 
-    [McpServerTool,
-        Description("Gets file information including path, line count, content, and line number guides. Useful when planning line-based edits.")]
-    public static string GetFileInfo([Description("The full path to the file to be read.")] string filePath)
+[McpServerTool,
+        Description("Gets file information including path, line count and content.")]
+    public static string GetFileInfo(
+        [Description("The full path to the file to be read.")] string filePath,
+        [Description("The encoding to use (utf-8, shift-jis, etc.). Default is utf-8.")] string encodingName = "utf-8",
+        [Description("Whether to include file content in the result. For large files, setting this to false is recommended.")] bool includeContent = true)
     {
-        Security.ValidateIsAllowedDirectory(filePath);
-        var content = File.ReadAllText(filePath);
-        var lines = File.ReadAllLines(filePath);
-
-        var fileInfo = new
+        try
         {
-            FilePath = filePath,
-            Content = content,
-            NewLine = DetectNewline(content),
-            LineCount = lines.Length,
-        };
-
-        return JsonSerializer.Serialize(fileInfo, new JsonSerializerOptions { WriteIndented = true });
+            Security.ValidateIsAllowedDirectory(filePath);
+            
+            var fileInfo = new FileInfo(filePath);
+            
+            bool isLargeFile = fileInfo.Length > MaxFileSize;
+            
+            Encoding encoding = ResolveEncoding(encodingName);
+            
+            var result = new
+            {
+                FilePath = filePath,
+                NewLine = Environment.NewLine,
+                FileSize = fileInfo.Length,
+                LastModified = fileInfo.LastWriteTime,
+                IsLargeFile = isLargeFile,
+                ContentIncluded = includeContent && (!isLargeFile),
+                LineCount = 0, // 後で設定
+                Content = string.Empty // 後で設定（必要な場合）
+            };
+            
+            // パフォーマンス改善: 一度だけファイルを読み込み、必要に応じて行数とコンテンツを設定
+            var resultObj = JsonDocument.Parse(JsonSerializer.Serialize(result)).RootElement.Clone();
+            var resultDict = System.Text.Json.Nodes.JsonNode.Parse(resultObj.GetRawText()).AsObject();
+            
+            if (result.ContentIncluded)
+            {
+                // 効率化: 一度の読み込みで行数とコンテンツ両方を取得
+                string content = File.ReadAllText(filePath, encoding);
+                int lineCount = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None).Length;
+                
+                resultDict["lineCount"] = lineCount;
+                resultDict["content"] = content;
+            }
+            else
+            {
+                // コンテンツは含めず、行だけカウント（メモリ効率良く）
+                int lineCount = 0;
+                using (var reader = new StreamReader(filePath, encoding))
+                {
+                    while (reader.ReadLine() != null)
+                    {
+                        lineCount++;
+                    }
+                }
+                
+                resultDict["lineCount"] = lineCount;
+                resultDict["content"] = null;
+            }
+            
+            return JsonSerializer.Serialize(resultDict, new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
+        }
+        catch (Exception ex)
+        {
+            throw new IOException($"Failed to get file information for '{filePath}': {ex.Message}", ex);
+        }
     }
 
     [McpServerTool, Description("Retrieves the hierarchical folder structure in YAML format from a specified directory path.")]
@@ -149,6 +147,7 @@ public static partial class FileSystemTools
     }
 
     #region Private Methods
+
 
     private static void TraverseDirectoryYaml(
         string path,
@@ -221,17 +220,23 @@ public static partial class FileSystemTools
         return Path.GetRelativePath(rootPath, path).Replace("\\", "/");
     }
 
-    private static string DetectNewline(string text)
+
+    private static Encoding ResolveEncoding(string encodingName)
     {
-        // Detect newline code: \r\n > \n > \r
-        if (text.Contains("\r\n"))
-            return "CRLF (\\r\\n)";
-        else if (text.Contains("\n"))
-            return "LF (\\n)";
-        else if (text.Contains("\r"))
-            return "CR (\\r)";
-        else
-            return "No newline detected";
+        if (string.IsNullOrWhiteSpace(encodingName))
+        {
+            return DefaultEncoding;
+        }
+
+        try
+        {
+            return Encoding.GetEncoding(encodingName);
+        }
+        catch (ArgumentException)
+        {
+            // 不明なエンコーディング名の場合はデフォルトを使用
+            return DefaultEncoding;
+        }
     }
 
     #endregion
