@@ -14,7 +14,7 @@ public static partial class FileSystemTools
         {
             if (!File.Exists(path) && !Directory.Exists(path))
             {
-                throw new FileNotFoundException($"指定されたパスが見つかりません: {path}");
+                return $"指定されたパスが見つかりません: {path}";
             }
 
             string zipFileName = Path.GetFileName(path) + ".zip";
@@ -64,12 +64,12 @@ public static partial class FileSystemTools
         {
             if (!File.Exists(filePath))
             {
-                throw new FileNotFoundException($"指定されたZIPファイルが見つかりません: {filePath}");
+                return $"指定されたZIPファイルが見つかりません: {filePath}";
             }
 
             if (!Path.GetExtension(filePath).Equals(".zip", StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("ZIPファイルではありません。");
+                return "ZIPファイルではありません。";
             }
 
             string extractDir = Path.Combine(
