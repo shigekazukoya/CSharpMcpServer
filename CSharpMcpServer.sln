@@ -16,6 +16,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ソリューション項目
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HardwareInfoRetriever", "HardwareInfoRetriever\HardwareInfoRetriever.csproj", "{6FB49A79-9624-4C08-99EB-62A6BE950351}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkInfo", "NetworkInfo\NetworkInfo.csproj", "{E19CAAC6-974E-49FF-AAAB-BEB4D59846FF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,6 +40,10 @@ Global
 		{6FB49A79-9624-4C08-99EB-62A6BE950351}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6FB49A79-9624-4C08-99EB-62A6BE950351}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6FB49A79-9624-4C08-99EB-62A6BE950351}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E19CAAC6-974E-49FF-AAAB-BEB4D59846FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E19CAAC6-974E-49FF-AAAB-BEB4D59846FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E19CAAC6-974E-49FF-AAAB-BEB4D59846FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E19CAAC6-974E-49FF-AAAB-BEB4D59846FF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
