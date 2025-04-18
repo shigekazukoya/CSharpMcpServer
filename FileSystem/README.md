@@ -1,36 +1,41 @@
-# FileSystem
+﻿# FileSystem
 
-CSharpMcpServer FileSystemは、Model Context Protocol (MCP) サーバーのファイルシステム操作ツールを提供するモジュールです。このコンポーネントは、ファイルの読み込み、編集、削除、ディレクトリ構造の取得などの基本的なファイルシステム操作を可能にします。
+CSharpMcpServer FileSystem は、Model Context Protocol (MCP) サーバーのファイルシステム操作ツールを提供するモジュールです。このコンポーネントは、ファイルの読み込み、編集、削除、ディレクトリ構造の取得などの基本的なファイルシステム操作を可能にします。
 
 ## 機能
 - **GetFileInfo**: ファイルの情報（パス、行数、内容）を取得
-- **EditFile**: 特定の行番号から指定した行数を削除し、新しいコンテンツに置き換え
+- **WriteFile**: ファイルの内容を書き込み
 - **Delete**: ファイルまたはディレクトリを削除（ディレクトリの場合は再帰的削除オプションあり）
 - **GetFolderStructure**: 指定されたディレクトリの階層構造をYAML形式で取得（.gitignoreに基づく除外処理付き）
+- **Zip**: ディレクトリまたはファイルを圧縮してZIPファイルを作成
+- **Unzip**: ZIPファイルを展開
+- **Launch**: ファイルまたはフォルダを規定のアプリケーションで開く
 
 ## API詳細
 
 ### GetFileInfo
 ```csharp
-public static string GetFileInfo(string filePath)
+public static string GetFileInfo(string filePath, string encodingName = "utf-8", bool includeContent = true)
 ```
 指定されたファイルの情報を取得します：
 - **filePath**: 読み込むファイルの完全パス
+- **encodingName**: 使用するエンコーディング（utf-8, shift-jis, etc.）、デフォルトはutf-8
+- **includeContent**: 結果にファイル内容を含めるかどうか。大きいファイルの場合はfalseを推奨
 - **戻り値**: ファイルパス、行数、内容を含むJSON形式の情報
 
-### EditFile
+### WriteFile
 ```csharp
-public static void EditFile(string path, int lineNumber, int linesToDelete, string content)
+public static string WriteFile(string filePath, string content, string encodingName = "utf-8")
 ```
-ファイルの特定の位置のコンテンツを編集します：
+ファイルに内容を書き込みます：
 - **filePath**: 編集するファイルのパス
-- **lineNumber**: 編集を開始する1ベースの行番号（ファイルの先頭から開始するには1を使用）
-- **linesToDelete**: 開始行から削除する行数（完全なファイル置換には総行数を、削除なしの挿入には0を設定）
-- **content**: 指定された位置に挿入するテキスト内容（完全なファイル置換の場合は新しい内容全体を提供）
+- **content**: ファイルに書き込む内容
+- **encodingName**: 使用するエンコーディング（utf-8, shift-jis, etc.）、デフォルトはutf-8
+- **戻り値**: 成功時は "Success"、失敗時は "Failed"
 
 ### Delete
 ```csharp
-public static void Delete(string path, bool recursive = false)
+public static void Delete(string fullPath, bool recursive = false)
 ```
 ファイルまたはディレクトリを削除します：
 - **fullPath**: 削除するファイルまたはディレクトリの完全パス
@@ -44,6 +49,30 @@ public static string GetFolderStructure(string fullPath, bool recursive = true)
 - **fullPath**: フォルダ構造を取得するルートディレクトリの絶対パス
 - **recursive**: フォルダ構造にサブディレクトリを再帰的に含めるかどうかを指定（trueの場合、すべてのネストされたディレクトリを走査、falseの場合はルートディレクトリの直接の子のみ含む、デフォルトはtrue）
 - **戻り値**: YAML形式のフォルダ構造
+
+### Zip
+```csharp
+public static string Zip(string path)
+```
+指定されたディレクトリまたはファイルをZIP形式に圧縮します：
+- **path**: 圧縮するディレクトリまたはファイルのパス
+- **戻り値**: 圧縮結果のメッセージ
+
+### Unzip
+```csharp
+public static string Unzip(string filePath)
+```
+ZIPファイルを展開します：
+- **filePath**: 展開するZIPファイルのパス
+- **戻り値**: 展開結果のメッセージ
+
+### Launch
+```csharp
+public static string Launch(string path)
+```
+ファイルまたはフォルダを規定のアプリケーションで開きます：
+- **path**: ファイルまたはフォルダのパス
+- **戻り値**: 実行結果のメッセージ
 
 ## 使用方法
 
@@ -110,33 +139,38 @@ The CSharpMcpServer FileSystem is a module that provides file system operation t
 
 ## Features
 - **GetFileInfo**: Get file information including path, line count, and content
-- **EditFile**: Delete a specified number of lines from a specific line number and replace with new content
+- **WriteFile**: Write content to a file
 - **Delete**: Delete a file or directory (with recursive deletion option for directories)
 - **GetFolderStructure**: Get the hierarchical structure of a specified directory in YAML format (with exclusion processing based on .gitignore)
+- **Zip**: Compress a directory or file to create a ZIP file
+- **Unzip**: Extract a ZIP file
+- **Launch**: Open a file or folder with the default application
 
 ## API Details
 
 ### GetFileInfo
 ```csharp
-public static string GetFileInfo(string filePath)
+public static string GetFileInfo(string filePath, string encodingName = "utf-8", bool includeContent = true)
 ```
 Gets information about the specified file:
 - **filePath**: The full path to the file to be read
+- **encodingName**: The encoding to use (utf-8, shift-jis, etc.). Default is utf-8
+- **includeContent**: Whether to include file content in the result. For large files, setting this to false is recommended
 - **Returns**: JSON-formatted information including file path, line count, and content
 
-### EditFile
+### WriteFile
 ```csharp
-public static void EditFile(string path, int lineNumber, int linesToDelete, string content)
+public static string WriteFile(string filePath, string content, string encodingName = "utf-8")
 ```
-Edits content at a specific position in a file:
-- **filePath**: The full path to the file to edit
-- **lineNumber**: The 1-based line number where the edit should start (use 1 to start from the beginning of the file)
-- **linesToDelete**: The number of lines to delete from the start line (set to the total line count for complete file replacement, or 0 for pure insertion without deletion)
-- **content**: The text content to insert at the specified position (for full file replacement, provide the entire new content)
+Writes content to a file:
+- **filePath**: The path to the file to edit
+- **content**: The content to write to the file
+- **encodingName**: The encoding to use (utf-8, shift-jis, etc.). Default is utf-8
+- **Returns**: "Success" on success, "Failed" on failure
 
 ### Delete
 ```csharp
-public static void Delete(string path, bool recursive = false)
+public static void Delete(string fullPath, bool recursive = false)
 ```
 Deletes a file or directory:
 - **fullPath**: The full path of the file or directory to delete
@@ -150,6 +184,30 @@ Retrieves the hierarchical folder structure in YAML format:
 - **fullPath**: Absolute path to the root directory whose folder structure should be retrieved
 - **recursive**: Specifies whether to include subdirectories recursively in the folder structure (if true, the function will traverse through all nested directories; if false, only the immediate children of the root directory will be included, default is true)
 - **Returns**: Folder structure in YAML format
+
+### Zip
+```csharp
+public static string Zip(string path)
+```
+Compresses the specified directory or file to ZIP format:
+- **path**: The path to the directory or file to compress
+- **Returns**: Message about the compression result
+
+### Unzip
+```csharp
+public static string Unzip(string filePath)
+```
+Extracts a ZIP file:
+- **filePath**: The path to the ZIP file to extract
+- **Returns**: Message about the extraction result
+
+### Launch
+```csharp
+public static string Launch(string path)
+```
+Opens a file or folder with the default application:
+- **path**: The path to the file or folder
+- **Returns**: Message about the execution result
 
 ## Usage
 
@@ -207,4 +265,3 @@ Additionally, the following common files/directories are automatically excluded:
 - Visual Studio files like .vs, *.user, *.suo
 - Package directories like node_modules, packages
 - Log files, backup files, cache files
-

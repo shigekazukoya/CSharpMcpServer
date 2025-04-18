@@ -1,4 +1,4 @@
-# HardwareInfoRetriever
+﻿# HardwareInfoRetriever
 
 CSharpMcpServer HardwareInfoRetrieverは、Model Context Protocol (MCP) サーバーのシステムハードウェアおよびネットワーク情報の取得ツールを提供するモジュールです。このコンポーネントは、OS、CPU、GPU、メモリ、ディスク、ネットワークアダプターに関する詳細情報をYAML形式で簡単に取得できるようにします。
 
