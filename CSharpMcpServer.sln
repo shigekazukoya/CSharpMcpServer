@@ -35,6 +35,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpMcpServer.Common", "C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Web", "Web\Web.csproj", "{D46CB410-199A-4627-855D-C73448025E43}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Utility", "Utility", "{5BEEEFE3-ED11-4D72-A2B8-262C9BDB8EF7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McpInsight", "CSharpMcpServer.Utility\McpInsight\McpInsight\McpInsight.csproj", "{454509A9-F030-4679-B162-ED0F154E84EA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McpInsight.Desktop", "CSharpMcpServer.Utility\McpInsight\McpInsight.Desktop\McpInsight.Desktop.csproj", "{651218EA-8800-41A7-B211-B7D560132658}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +91,14 @@ Global
 		{D46CB410-199A-4627-855D-C73448025E43}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D46CB410-199A-4627-855D-C73448025E43}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D46CB410-199A-4627-855D-C73448025E43}.Release|Any CPU.Build.0 = Release|Any CPU
+		{454509A9-F030-4679-B162-ED0F154E84EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{454509A9-F030-4679-B162-ED0F154E84EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{454509A9-F030-4679-B162-ED0F154E84EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{454509A9-F030-4679-B162-ED0F154E84EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{651218EA-8800-41A7-B211-B7D560132658}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{651218EA-8800-41A7-B211-B7D560132658}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{651218EA-8800-41A7-B211-B7D560132658}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{651218EA-8800-41A7-B211-B7D560132658}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -92,5 +106,8 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{5320D929-3E55-4898-A581-899FBEA523FB} = {61CB45F7-7447-410E-934E-3B040F21D5B9}
 		{7C84EBB7-ED1E-4EAE-97DA-643A3262544E} = {5320D929-3E55-4898-A581-899FBEA523FB}
+		{5BEEEFE3-ED11-4D72-A2B8-262C9BDB8EF7} = {61CB45F7-7447-410E-934E-3B040F21D5B9}
+		{454509A9-F030-4679-B162-ED0F154E84EA} = {5BEEEFE3-ED11-4D72-A2B8-262C9BDB8EF7}
+		{651218EA-8800-41A7-B211-B7D560132658} = {5BEEEFE3-ED11-4D72-A2B8-262C9BDB8EF7}
 	EndGlobalSection
 EndGlobal
