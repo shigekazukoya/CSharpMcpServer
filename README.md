@@ -14,7 +14,6 @@ C#で実装されたModel Context Protocol (MCP) サーバーは、Claude Deskto
   - ファイル関連付け情報の取得機能
 
 - [Command](Command/) - シェルコマンド実行機能を提供
-  - Windowsコマンドプロンプト(CMD)でのコマンド実行
   - PowerShellでのコマンド実行
   - WSL Bashでのコマンド実行
   - タイムアウト管理機能付き
@@ -65,7 +64,6 @@ The C# implementation of Model Context Protocol (MCP) servers provides extension
   - Retrieving file association information
 
 - [Command](Command/) - Provides shell command execution functionality
-  - Command execution in Windows Command Prompt (CMD)
   - Command execution in PowerShell
   - Command execution in WSL Bash
   - Timeout management capability
