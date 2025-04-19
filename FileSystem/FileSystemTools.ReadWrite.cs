@@ -9,8 +9,50 @@ namespace FileSystem.Tools;
 [McpServerToolType]
 public static partial class FileSystemTools
 {
+    [McpServerTool, Description("Write file")]
+    public static string WriteFile(
+        [Description("The path to the file to edit")] string filePath,
+        [Description("The text to replace it with")] string content,
+        [Description("The encoding to use (utf-8, shift-jis, etc.). Default is utf-8.")] string encodingName = "utf-8")
+    {
+        try
+        {
+            // セキュリティチェック
+            Security.ValidateIsAllowedDirectory(filePath);
+
+            if (!Security.HasWritePermission(filePath))
+            {
+                return $"書き込み権限がありません: {filePath}";
+            }
+
+            // ファイルが存在しない場合の処理
+            bool fileExists = File.Exists(filePath);
+            var encoding = ResolveEncoding(encodingName);
+
+            // 親ディレクトリが存在しない場合は作成
+            string directory = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            File.WriteAllText(filePath, content, encoding);
+
+            return JsonSerializer.Serialize(new
+            {
+                Status = "Success",
+                FilePath = filePath,
+                Message = fileExists ? $"ファイルを正常に編集しました: {filePath}" : $"ファイルを正常に作成しました: {filePath}",
+                Timestamp = DateTime.Now
+            });
+        }
+        catch (Exception ex)
+        {
+            return ExceptionHandling.FormatExceptionAsJson(ex, "ファイル書き込み");
+        }
+    }
     [McpServerTool, Description("Edit file by replacing specified text")]
-    public static async Task<string> WriteFileAsync(
+    public static async Task<string> EditFileAsync(
         [Description("The path to the file to edit")] string filePath,
         [Description("The text to replace")] string oldString,
         [Description("The text to replace it with")] string newString,
@@ -28,91 +70,75 @@ public static partial class FileSystemTools
             }
 
             // ファイルが存在しない場合の処理
-            bool fileExists = File.Exists(filePath);
             string content;
             var encoding = ResolveEncoding(encodingName);
 
-            if (fileExists)
+            // 既存ファイルの読み込み
+            content = await File.ReadAllTextAsync(filePath, encoding);
+
+            // 空のoldStringの場合は新規ファイル作成として扱う
+            if (!string.IsNullOrEmpty(oldString))
             {
-                // 既存ファイルの読み込み
-                content = await File.ReadAllTextAsync(filePath, encoding);
-
-                // 空のoldStringの場合は新規ファイル作成として扱う
-                if (!string.IsNullOrEmpty(oldString))
+                // 置換処理
+                int actualReplacements = 0;
+                if (replacementCount == 1)
                 {
-                    // 置換処理
-                    int actualReplacements = 0;
-                    if (replacementCount == 1)
+                    // 単一置換
+                    int index = content.IndexOf(oldString);
+                    if (index >= 0)
                     {
-                        // 単一置換
-                        int index = content.IndexOf(oldString);
-                        if (index >= 0)
-                        {
-                            content = content.Substring(0, index) + newString + content.Substring(index + oldString.Length);
-                            actualReplacements = 1;
-                        }
-                    }
-                    else
-                    {
-                        // 置換前の出現回数をカウント
-                        int occurrencesBeforeReplace = CountOccurrences(content, oldString);
-
-                        // 複数置換
-                        string newContent = content.Replace(oldString, newString);
-
-                        // 置換後の正確な置換回数を計算
-                        if (oldString.Length == newString.Length)
-                        {
-                            // 同じ長さの場合、出現回数の変化で計算
-                            int occurrencesAfterReplace = CountOccurrences(newContent, newString);
-                            actualReplacements = occurrencesBeforeReplace - (occurrencesAfterReplace - occurrencesBeforeReplace);
-                        }
-                        else
-                        {
-                            // 異なる長さの場合、直接置換回数をカウント
-                            actualReplacements = occurrencesBeforeReplace;
-                        }
-
-                        if (replacementCount > 0 && actualReplacements != replacementCount)
-                        {
-                            return JsonSerializer.Serialize(new
-                            {
-                                Status = "Error",
-                                Message = $"予期された置換回数({replacementCount})と実際の置換回数({actualReplacements})が一致しません",
-                                FilePath = filePath
-                            });
-                        }
-
-                        content = newContent;
-                    }
-
-                    if (actualReplacements == 0)
-                    {
-                        return JsonSerializer.Serialize(new
-                        {
-                            Status = "Error",
-                            Message = $"置換対象の文字列が見つかりませんでした",
-                            FilePath = filePath
-                        });
+                        content = content.Substring(0, index) + newString + content.Substring(index + oldString.Length);
+                        actualReplacements = 1;
                     }
                 }
                 else
                 {
-                    // oldStringが空の場合、contentを完全に上書き
-                    content = newString;
+                    // 置換前の出現回数をカウント
+                    int occurrencesBeforeReplace = CountOccurrences(content, oldString);
+
+                    // 複数置換
+                    string newContent = content.Replace(oldString, newString);
+
+                    // 置換後の正確な置換回数を計算
+                    if (oldString.Length == newString.Length)
+                    {
+                        // 同じ長さの場合、出現回数の変化で計算
+                        int occurrencesAfterReplace = CountOccurrences(newContent, newString);
+                        actualReplacements = occurrencesBeforeReplace - (occurrencesAfterReplace - occurrencesBeforeReplace);
+                    }
+                    else
+                    {
+                        // 異なる長さの場合、直接置換回数をカウント
+                        actualReplacements = occurrencesBeforeReplace;
+                    }
+
+                    if (replacementCount > 0 && actualReplacements != replacementCount)
+                    {
+                        return JsonSerializer.Serialize(new
+                        {
+                            Status = "Error",
+                            Message = $"予期された置換回数({replacementCount})と実際の置換回数({actualReplacements})が一致しません",
+                            FilePath = filePath
+                        });
+                    }
+
+                    content = newContent;
+                }
+
+                if (actualReplacements == 0)
+                {
+                    return JsonSerializer.Serialize(new
+                    {
+                        Status = "Error",
+                        Message = $"置換対象の文字列が見つかりませんでした",
+                        FilePath = filePath
+                    });
                 }
             }
             else
             {
-                // 新規ファイル作成
+                // oldStringが空の場合、contentを完全に上書き
                 content = newString;
-
-                // 親ディレクトリが存在しない場合は作成
-                string directory = Path.GetDirectoryName(filePath);
-                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
             }
 
             // 非同期で書き込み
@@ -122,7 +148,7 @@ public static partial class FileSystemTools
             {
                 Status = "Success",
                 FilePath = filePath,
-                Message = fileExists ? $"ファイルを正常に編集しました: {filePath}" : $"ファイルを正常に作成しました: {filePath}",
+                Message =  $"ファイルを正常に編集しました: {filePath}",
                 Timestamp = DateTime.Now
             });
         }
