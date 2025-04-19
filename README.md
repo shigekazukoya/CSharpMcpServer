@@ -22,7 +22,6 @@ C#で実装されたModel Context Protocol (MCP) サーバーは、Claude Deskto
   - OS、CPU、GPU、メモリ、ディスク情報の取得（キャッシュ機能付き）
   - 特定コンポーネントの選択的な情報取得
   - キャッシュ情報の強制更新機能
-  - ネットワークアダプターとTCP接続情報の取得
 
 - [Time](Time/) - 現在の時刻を取得
   - システムのローカル時間をフォーマット済みの文字列として提供
@@ -72,7 +71,6 @@ The C# implementation of Model Context Protocol (MCP) servers provides extension
   - OS, CPU, GPU, memory, and disk information (with caching support)
   - Selective retrieval of specific hardware components
   - Forced refresh of cached hardware information
-  - Network adapter and TCP connection information
 
 - [Time](Time/) - Retrieves the current time
   - Provides the system's local time as a formatted string
