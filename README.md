@@ -34,6 +34,12 @@ C#で実装されたModel Context Protocol (MCP) サーバーは、Claude Deskto
   - ネットワークアダプター情報の取得
   - TCP接続情報の取得
 
+- [VisualStudio](VisualStudio/) - Visual Studio情報を取得
+  - 実行中のVisual Studioインスタンス情報の取得
+  - アクティブなソリューション情報の取得
+  - 現在選択されているファイルの内容を取得
+  - 開いているすべてのファイル情報の取得
+
 - [Rss](Rss/) - RSSフィードを処理
   - 複数のRSSフィードを同時に処理
   - マークダウン形式のリンクとして出力
@@ -82,6 +88,12 @@ The C# implementation of Model Context Protocol (MCP) servers provides extension
 - [NetworkInfo](NetworkInfo/) - Retrieves network information
   - Network adapter information
   - TCP connection information
+
+- [VisualStudio](VisualStudio/) - Retrieves Visual Studio information
+  - Information about running Visual Studio instances
+  - Active solution information
+  - Content of currently selected files
+  - Information about all open files
 
 - [Rss](Rss/) - Processes RSS feeds
   - Processes multiple RSS feeds simultaneously
