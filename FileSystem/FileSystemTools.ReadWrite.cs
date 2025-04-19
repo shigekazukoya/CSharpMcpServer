@@ -36,7 +36,8 @@ public static partial class FileSystemTools
                 Directory.CreateDirectory(directory);
             }
 
-            File.WriteAllText(filePath, content, encoding);
+            var normalizedContent = NormalizeLineEndings(content);
+            File.WriteAllText(filePath, normalizedContent, encoding);
 
             return JsonSerializer.Serialize(new
             {
@@ -52,7 +53,7 @@ public static partial class FileSystemTools
         }
     }
     [McpServerTool, Description("Edit file by replacing specified text")]
-    public static async Task<string> EditFileAsync(
+    public static string EditFile(
         [Description("The path to the file to edit")] string filePath,
         [Description("The text to replace")] string oldString,
         [Description("The text to replace it with")] string newString,
@@ -73,37 +74,44 @@ public static partial class FileSystemTools
             string content;
             var encoding = ResolveEncoding(encodingName);
 
-            // 既存ファイルの読み込み
-            content = await File.ReadAllTextAsync(filePath, encoding);
+            // 既存ファイルの読み込み - バイナリとして読み込んでエンコーディング変換を避ける
+            byte[] fileBytes = File.ReadAllBytes(filePath);
+            content = encoding.GetString(fileBytes);
 
             // 空のoldStringの場合は新規ファイル作成として扱う
             if (!string.IsNullOrEmpty(oldString))
             {
+                // 改行コードの正規化
+                string normalizedContent = NormalizeLineEndings(content);
+                string normalizedOldString = NormalizeLineEndings(oldString);
+                string normalizedNewString = NormalizeLineEndings(newString);
+
                 // 置換処理
                 int actualReplacements = 0;
                 if (replacementCount == 1)
                 {
                     // 単一置換
-                    int index = content.IndexOf(oldString);
+                    int index = normalizedContent.IndexOf(normalizedOldString);
                     if (index >= 0)
                     {
-                        content = content.Substring(0, index) + newString + content.Substring(index + oldString.Length);
+                        normalizedContent = normalizedContent.Substring(0, index) + normalizedNewString + normalizedContent.Substring(index + normalizedOldString.Length);
                         actualReplacements = 1;
+                        content = normalizedContent; // 正規化されたコンテンツで更新
                     }
                 }
                 else
                 {
                     // 置換前の出現回数をカウント
-                    int occurrencesBeforeReplace = CountOccurrences(content, oldString);
+                    int occurrencesBeforeReplace = CountOccurrences(normalizedContent, normalizedOldString);
 
                     // 複数置換
-                    string newContent = content.Replace(oldString, newString);
+                    string newContent = normalizedContent.Replace(normalizedOldString, normalizedNewString);
 
                     // 置換後の正確な置換回数を計算
-                    if (oldString.Length == newString.Length)
+                    if (normalizedOldString.Length == normalizedNewString.Length)
                     {
                         // 同じ長さの場合、出現回数の変化で計算
-                        int occurrencesAfterReplace = CountOccurrences(newContent, newString);
+                        int occurrencesAfterReplace = CountOccurrences(newContent, normalizedNewString);
                         actualReplacements = occurrencesBeforeReplace - (occurrencesAfterReplace - occurrencesBeforeReplace);
                     }
                     else
@@ -141,8 +149,9 @@ public static partial class FileSystemTools
                 content = newString;
             }
 
-            // 非同期で書き込み
-            await File.WriteAllTextAsync(filePath, content, encoding);
+            // 非同期で書き込み - バイナリに変換して書き込む
+            byte[] outputBytes = encoding.GetBytes(content);
+            File.WriteAllBytes(filePath, outputBytes);
 
             return JsonSerializer.Serialize(new
             {
@@ -223,7 +232,7 @@ public static partial class FileSystemTools
             {
                 // 小さいファイルの場合：一括読み込み
                 string content = await File.ReadAllTextAsync(filePath, encoding);
-                int lineCount = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None).Length;
+                int lineCount = content.Split(new[] { "\\r\\n", "\\r", "\\n" }, StringSplitOptions.None).Length;
 
                 resultDict["lineCount"] = lineCount;
                 resultDict["content"] = content;
@@ -486,6 +495,23 @@ public static partial class FileSystemTools
     }
 
     #region Private Methods
+
+    /// <summary>
+    /// 改行コードを正規化します
+    /// </summary>
+    /// <param name="text">正規化する文字列</param>
+    /// <returns>正規化された文字列</returns>
+    private static string NormalizeLineEndings(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return text;
+
+        // まず全ての改行コードをLFに変換
+        text = text.Replace("\r\n", "\n").Replace("\r", "\n");
+        
+        // 環境に応じた改行コードに変換
+        return text.Replace("\n", Environment.NewLine);
+    }
 
     /// <summary>
     /// エンコーディング名からEncodingオブジェクトを取得します
