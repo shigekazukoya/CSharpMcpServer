@@ -4,6 +4,8 @@ CSharpMcpServer HardwareInfoRetrieverは、Model Context Protocol (MCP) サー�
 
 ## 機能
 - **HardwareInfoRetriever**: OS、CPU、GPU、メモリ、ディスクなどのハードウェア情報を取得
+- **SelectiveHardwareInfo**: 指定したコンポーネントのハードウェア情報のみを取得
+- **RefreshHardwareInfo**: キャッシュされたハードウェア情報を強制的に更新
 - **GetNetworkInfo**: ネットワークアダプターおよびTCP接続に関する情報を取得
 
 ## API詳細
@@ -13,6 +15,7 @@ CSharpMcpServer HardwareInfoRetrieverは、Model Context Protocol (MCP) サー�
 public static string HardwareInfoRetriever()
 ```
 システムのハードウェア情報をYAML形式で取得します：
+- **説明**: キャッシュサポート付きの包括的なハードウェア情報を取得します。パフォーマンス向上のために情報は特定の期間キャッシュされます。
 - **戻り値**: 以下の情報を含むYAML形式のハードウェア情報
   - **OS情報**: OSのバージョン、プラットフォーム、64ビット有無、マシン名、ユーザー名など
   - **CPU情報**: 名前、製造元、コア数、論理プロセッサ数、最大クロック速度
@@ -20,11 +23,29 @@ public static string HardwareInfoRetriever()
   - **メモリ情報**: 合計容量およびメモリデバイスの詳細（タイプ、容量、製造元）
   - **ディスク情報**: 名前、ラベル、タイプ、フォーマット、合計サイズ、空き容量、使用容量
 
+### SelectiveHardwareInfo
+```csharp
+public static string SelectiveHardwareInfo(params string[] components)
+```
+指定したコンポーネントのハードウェア情報のみを取得します：
+- **説明**: 指定したコンポーネントのハードウェア情報のみを取得します。有効なコンポーネント: os, cpu, gpu, memory/ram, storage/disk
+- **components**: 取得するハードウェアコンポーネントの配列
+- **戻り値**: 指定したコンポーネントの情報を含むYAML形式のハードウェア情報
+
+### RefreshHardwareInfo
+```csharp
+public static string RefreshHardwareInfo()
+```
+キャッシュされたハードウェア情報を強制的に更新します：
+- **説明**: 既存のキャッシュデータを無視して、最新のシステム情報を取得し、キャッシュを更新します
+- **戻り値**: 更新されたYAML形式のハードウェア情報
+
 ### GetNetworkInfo
 ```csharp
 public static string GetNetworkInfo()
 ```
 システムのネットワーク情報をYAML形式で取得します：
+- **説明**: ネットワーク情報を取得します
 - **戻り値**: 以下の情報を含むYAML形式のネットワーク情報
   - **ネットワークアダプター**: 名前、説明、タイプ、速度、MACアドレス、IPv4アドレス
   - **TCP接続**: ローカルエンドポイント、リモートエンドポイント、接続状態（最大20接続まで表示）
@@ -81,6 +102,8 @@ The CSharpMcpServer HardwareInfoRetriever is a module that provides system hardw
 
 ## Features
 - **HardwareInfoRetriever**: Get hardware information including OS, CPU, GPU, memory, and disks
+- **SelectiveHardwareInfo**: Get hardware information for only the specified components
+- **RefreshHardwareInfo**: Force a refresh of cached hardware information
 - **GetNetworkInfo**: Get information about network adapters and TCP connections
 
 ## API Details
@@ -90,6 +113,7 @@ The CSharpMcpServer HardwareInfoRetriever is a module that provides system hardw
 public static string HardwareInfoRetriever()
 ```
 Gets system hardware information in YAML format:
+- **Description**: Retrieves comprehensive hardware information with caching support. Information is cached for a specific duration to improve performance for repeated calls.
 - **Returns**: YAML-formatted hardware information including:
   - **OS information**: OS version, platform, 64-bit status, machine name, user name, etc.
   - **CPU information**: Name, manufacturer, cores, logical processors, max clock speed
@@ -97,11 +121,29 @@ Gets system hardware information in YAML format:
   - **Memory information**: Total capacity and memory device details (type, capacity, manufacturer)
   - **Disk information**: Name, label, type, format, total size, free space, used space
 
+### SelectiveHardwareInfo
+```csharp
+public static string SelectiveHardwareInfo(params string[] components)
+```
+Gets hardware information for only the specified components:
+- **Description**: Retrieves only the specified components of hardware information. Valid components: os, cpu, gpu, memory/ram, storage/disk.
+- **components**: Array of hardware components to retrieve
+- **Returns**: YAML-formatted hardware information for the specified components
+
+### RefreshHardwareInfo
+```csharp
+public static string RefreshHardwareInfo()
+```
+Forces a refresh of cached hardware information:
+- **Description**: Forces a refresh of the cached hardware information, ignoring any existing cached data and retrieving the latest system information.
+- **Returns**: Updated YAML-formatted hardware information
+
 ### GetNetworkInfo
 ```csharp
 public static string GetNetworkInfo()
 ```
 Gets system network information in YAML format:
+- **Description**: Retrieves network information
 - **Returns**: YAML-formatted network information including:
   - **Network adapters**: Name, description, type, speed, MAC address, IPv4 addresses
   - **TCP connections**: Local endpoint, remote endpoint, connection state (showing up to 20 connections)

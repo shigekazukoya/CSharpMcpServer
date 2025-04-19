@@ -12,6 +12,7 @@ CSharpMcpServer Timeは、Model Context Protocol (MCP) サーバーの時間関�
 public static string GetCurrentTime()
 ```
 現在のシステム時刻を取得し、フォーマットされた文字列として返します：
+- **説明**: 現在のシステム時刻を取得し、フォーマットされた文字列として返します
 - **戻り値**: 一般的な日時形式でフォーマットされた現在のシステム時刻（"G"形式）
 
 ## Usage with Claude Desktop
@@ -62,6 +63,7 @@ The CSharpMcpServer Time is a module that provides time-related functionality fo
 public static string GetCurrentTime()
 ```
 Gets the current system time and returns it as a formatted string:
+- **Description**: Gets the current system time and returns it as a formatted string
 - **Returns**: The current system time formatted in the general date/time format ("G" format)
 
 ## Usage with Claude Desktop

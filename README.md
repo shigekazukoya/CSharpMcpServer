@@ -5,13 +5,24 @@ C#で実装されたModel Context Protocol (MCP) サーバーは、Claude Deskto
 ## Tools
 
 - [FileSystem](FileSystem/) - ファイルシステム操作機能を提供
-  - ファイルの読み書き、削除機能
-  - フォルダ構造の取得機能
+  - ファイルの読み書き、編集、削除機能
+  - ディレクトリの作成、フォルダ構造の取得機能
+  - ファイルやディレクトリの移動機能
   - ZIP圧縮・解凍機能
   - ファイル/フォルダを規定アプリで開く機能
+  - 指定アプリケーションでファイルを開く機能
+  - ファイル関連付け情報の取得機能
+
+- [Command](Command/) - シェルコマンド実行機能を提供
+  - Windowsコマンドプロンプト(CMD)でのコマンド実行
+  - PowerShellでのコマンド実行
+  - WSL Bashでのコマンド実行
+  - タイムアウト管理機能付き
 
 - [HardwareInfoRetriever](HardwareInfoRetriever/) - PC情報やネットワーク情報を取得
-  - OS、CPU、GPU、メモリ、ディスク情報の取得
+  - OS、CPU、GPU、メモリ、ディスク情報の取得（キャッシュ機能付き）
+  - 特定コンポーネントの選択的な情報取得
+  - キャッシュ情報の強制更新機能
   - ネットワークアダプターとTCP接続情報の取得
 
 - [Time](Time/) - 現在の時刻を取得
@@ -41,13 +52,24 @@ The C# implementation of Model Context Protocol (MCP) servers provides extension
 ## Tools
 
 - [FileSystem](FileSystem/) - Provides file system operation functionality
-  - File reading, writing, and deletion
-  - Folder structure retrieval
+  - File reading, writing, editing, and deletion
+  - Directory creation and folder structure retrieval
+  - Moving files and directories
   - ZIP compression and extraction
   - Opening files/folders with default applications
+  - Opening files with specific applications
+  - Retrieving file association information
+
+- [Command](Command/) - Provides shell command execution functionality
+  - Command execution in Windows Command Prompt (CMD)
+  - Command execution in PowerShell
+  - Command execution in WSL Bash
+  - Timeout management capability
 
 - [HardwareInfoRetriever](HardwareInfoRetriever/) - Retrieves PC and network information
-  - OS, CPU, GPU, memory, and disk information
+  - OS, CPU, GPU, memory, and disk information (with caching support)
+  - Selective retrieval of specific hardware components
+  - Forced refresh of cached hardware information
   - Network adapter and TCP connection information
 
 - [Time](Time/) - Retrieves the current time

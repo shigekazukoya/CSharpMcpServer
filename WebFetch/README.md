@@ -12,6 +12,7 @@ CSharpMcpServer WebFetch は、Model Context Protocol (MCP) サーバーのウ�
 public static async Task<string> ExtractMainContentFromUrl(string url)
 ```
 URLからメインコンテンツを抽出します：
+- **説明**: URLコンテンツを取得し、広告、ナビゲーション、スクリプトを削除して意味的なHTML要素を使用してメインコンテンツを特定します
 - **url**: コンテンツを取得するURLを指定します
 - **戻り値**: 広告やナビゲーションなどの不要な要素を削除した、ウェブページのメインコンテンツテキスト
 
@@ -87,6 +88,7 @@ The CSharpMcpServer WebFetch is a module that provides web content retrieval too
 public static async Task<string> ExtractMainContentFromUrl(string url)
 ```
 Extracts main content from a URL:
+- **Description**: Fetches URL content and extracts main text by removing ads, navigation, and scripts. Uses semantic HTML elements to identify main content.
 - **url**: The URL to fetch content from
 - **Returns**: The main content text of the webpage with unwanted elements like ads and navigation removed
 
