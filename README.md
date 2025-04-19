@@ -36,6 +36,10 @@ C#で実装されたModel Context Protocol (MCP) サーバーは、Claude Deskto
   - ネットワークアダプター情報の取得
   - TCP接続情報の取得
 
+- [Rss](Rss/) - RSSフィードを処理
+  - 複数のRSSフィードを同時に処理
+  - マークダウン形式のリンクとして出力
+
 ## 使用方法
 
 各ツールは独立したdotnetプロジェクトとして実装されており、それぞれをビルドして使用できます。詳細な使用方法は各ツールのREADMEを参照してください。
@@ -82,6 +86,10 @@ The C# implementation of Model Context Protocol (MCP) servers provides extension
 - [NetworkInfo](NetworkInfo/) - Retrieves network information
   - Network adapter information
   - TCP connection information
+
+- [Rss](Rss/) - Processes RSS feeds
+  - Processes multiple RSS feeds simultaneously
+  - Outputs content as markdown-formatted links
 
 ## Usage
 
