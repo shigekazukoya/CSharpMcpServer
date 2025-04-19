@@ -115,28 +115,6 @@ public static partial class FileSystemTools
         }
     }
 
-    /// <summary>
-    /// カレントディレクトリを取得します
-    /// </summary>
-    /// <returns>カレントディレクトリのパス</returns>
-    [McpServerTool, Description("Gets the current working directory.")]
-    public static string GetCurrentDirectory()
-    {
-        try
-        {
-            string currentDir = Directory.GetCurrentDirectory();
-            return JsonSerializer.Serialize(new
-            {
-                Status = "Success",
-                CurrentDirectory = currentDir
-            });
-        }
-        catch (Exception ex)
-        {
-            return ExceptionHandling.FormatExceptionAsJson(ex, "カレントディレクトリ取得");
-        }
-    }
-
     #region Private Methods
 
     /// <summary>
