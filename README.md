@@ -26,6 +26,9 @@ C#で実装されたModel Context Protocol (MCP) サーバーは、Claude Deskto
 - [Time](Time/) - 現在の時刻を取得
   - システムのローカル時間をフォーマット済みの文字列として提供
 
+- [Web](Web/) - Webブラウザとの連携機能を提供
+  - 規定のブラウザでURLを開く機能
+
 - [WebFetch](WebFetch/) - URLからコンテンツを取得
   - ウェブページから広告やナビゲーションを除去したメインコンテンツを抽出
   - セマンティックHTML要素を利用したコンテンツ特定アルゴリズム
@@ -86,6 +89,9 @@ The C# implementation of Model Context Protocol (MCP) servers provides extension
 
 - [Time](Time/) - Retrieves the current time
   - Provides the system's local time as a formatted string
+
+- [Web](Web/) - Provides web browser integration functionality
+  - Opening URLs in the default browser
 
 - [WebFetch](WebFetch/) - Retrieves content from URLs
   - Extracts main content from web pages by removing ads and navigation
