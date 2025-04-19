@@ -44,6 +44,12 @@ C#で実装されたModel Context Protocol (MCP) サーバーは、Claude Deskto
   - 複数のRSSフィードを同時に処理
   - マークダウン形式のリンクとして出力
 
+- [CreateMcpServer](CreateMcpServer/) - MCPサーバープロジェクトの作成ツール
+  - 新規MCPサーバープロジェクトの自動生成（CreateMcpServerProject）
+  - プロジェクト作成と設定に関するプロンプト機能（CreateMcpServerPrompts）
+  - 必要なフォルダ構造とプロジェクトファイルの自動作成
+  - ソリューションへの自動統合
+
 ## 使用方法
 
 各ツールは独立したdotnetプロジェクトとして実装されており、それぞれをビルドして使用できます。詳細な使用方法は各ツールのREADMEを参照してください。
@@ -98,6 +104,12 @@ The C# implementation of Model Context Protocol (MCP) servers provides extension
 - [Rss](Rss/) - Processes RSS feeds
   - Processes multiple RSS feeds simultaneously
   - Outputs content as markdown-formatted links
+
+- [CreateMcpServer](CreateMcpServer/) - Tool for creating MCP server projects
+  - Automatic generation of new MCP server projects (CreateMcpServerProject)
+  - Project creation and configuration prompts (CreateMcpServerPrompts)
+  - Automated creation of necessary folder structures and project files
+  - Automatic integration with solutions
 
 ## Usage
 

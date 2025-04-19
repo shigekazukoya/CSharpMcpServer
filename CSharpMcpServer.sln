@@ -24,6 +24,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rss", "Rss\Rss.csproj", "{5
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VisualStudio", "VisualStudio\VisualStudio.csproj", "{8253B6A0-1728-4FC3-8842-74EBC47A6741}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreateMcpServer", "CreateMcpServer\CreateMcpServer.csproj", "{556559D9-D381-4EEF-997F-41013E7DB256}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{5320D929-3E55-4898-A581-899FBEA523FB}"
+	ProjectSection(SolutionItems) = preProject
+		FileSystem\Security.cs = FileSystem\Security.cs
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpMcpServer.Common", "CSharpMcpServer.Common\CSharpMcpServer.Common.csproj", "{7C84EBB7-ED1E-4EAE-97DA-643A3262544E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -62,8 +71,20 @@ Global
 		{8253B6A0-1728-4FC3-8842-74EBC47A6741}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8253B6A0-1728-4FC3-8842-74EBC47A6741}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8253B6A0-1728-4FC3-8842-74EBC47A6741}.Release|Any CPU.Build.0 = Release|Any CPU
+		{556559D9-D381-4EEF-997F-41013E7DB256}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{556559D9-D381-4EEF-997F-41013E7DB256}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{556559D9-D381-4EEF-997F-41013E7DB256}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{556559D9-D381-4EEF-997F-41013E7DB256}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C84EBB7-ED1E-4EAE-97DA-643A3262544E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C84EBB7-ED1E-4EAE-97DA-643A3262544E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C84EBB7-ED1E-4EAE-97DA-643A3262544E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C84EBB7-ED1E-4EAE-97DA-643A3262544E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5320D929-3E55-4898-A581-899FBEA523FB} = {61CB45F7-7447-410E-934E-3B040F21D5B9}
+		{7C84EBB7-ED1E-4EAE-97DA-643A3262544E} = {5320D929-3E55-4898-A581-899FBEA523FB}
 	EndGlobalSection
 EndGlobal
