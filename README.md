@@ -53,6 +53,14 @@ C#で実装されたModel Context Protocol (MCP) サーバーは、Claude Deskto
   - 必要なフォルダ構造とプロジェクトファイルの自動作成
   - ソリューションへの自動統合
 
+## ユーティリティ
+
+- [McpInsight](CSharpMcpServer.Utility/McpInsight/) - MCPサーバーのデバッグ・監視ツール
+  - MCPクライアントとサーバー間の通信をリアルタイムに監視
+  - MCPサーバーコマンドのインタラクティブなテスト
+  - メッセージを分析しやすい形式で表示
+  - stdioベースのMCPサーバー開発のあらゆるフェーズで利用可能
+
 ## 使用方法
 
 各ツールは独立したdotnetプロジェクトとして実装されており、それぞれをビルドして使用できます。詳細な使用方法は各ツールのREADMEを参照してください。
@@ -116,6 +124,14 @@ The C# implementation of Model Context Protocol (MCP) servers provides extension
   - Project creation and configuration prompts (CreateMcpServerPrompts)
   - Automated creation of necessary folder structures and project files
   - Automatic integration with solutions
+
+## Utilities
+
+- [McpInsight](CSharpMcpServer.Utility/McpInsight/) - Debug and monitoring tool for MCP servers
+  - Real-time monitoring of communication between MCP clients and servers
+  - Interactive testing of MCP server commands
+  - Message display in an easy-to-analyze format
+  - Usable in all phases of stdio-based MCP server development
 
 ## Usage
 
