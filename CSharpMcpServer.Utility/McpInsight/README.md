@@ -1,57 +1,27 @@
 ﻿# McpInsight
 
-[English](#english) | [日本語](#japanese)
+[日本語版はこちら](README.ja.md)
 
-<a id="english"></a>
-## English
-
-### Overview
+## Overview
 McpInsight is a debugging tool for C# MCP (Model Context Protocol) servers that communicate via standard input/output (stdio). It allows developers to test, debug, and monitor interactions between MCP clients and servers without requiring a full client implementation.
 
-### Features
+## Features
 - Real-time monitoring of MCP message traffic between clients and servers
 - Interactive testing of MCP server commands
 - Message inspection and formatting for easy analysis
 - Support for standard MCP protocol operations
 - Debugging utilities for MCP server development
 
-### Usage
+## Usage
 1. Launch McpInsight
 2. Configure the connection to your MCP server
 3. Send test commands and monitor responses
 4. Analyze the communication flow between client and server
 
-### Requirements
+## Requirements
 - .NET 8.0 or higher
 - Windows operating system
 - MCP stdio server to test
 
-### Contributing
+## Contributing
 Contributions to McpInsight are welcome. Please feel free to submit issues and pull requests to the repository.
-
-<a id="japanese"></a>
-## 日本語
-
-### 概要
-McpInsightは標準入出力（stdio）を介して通信するC#製MCPサーバーのデバッグツールです。完全なクライアント実装を必要とせずに、MCPクライアントとサーバー間の対話をテスト、デバッグ、監視することができます。
-
-### 機能
-- MCPクライアントとサーバー間のメッセージトラフィックのリアルタイム監視
-- MCPサーバーコマンドのインタラクティブなテスト
-- 簡単な分析のためのメッセージ検査とフォーマット
-- 標準MCPプロトコル操作のサポート
-- MCPサーバー開発のためのデバッグユーティリティ
-
-### 使用方法
-1. McpInsightを起動する
-2. MCPサーバーへの接続を設定する
-3. テストコマンドを送信し、応答を監視する
-4. クライアントとサーバー間の通信フローを分析する
-
-### 必要条件
-- .NET 8.0以上
-- Windows オペレーティングシステム
-- テスト用のMCP stdioサーバー
-
-### 貢献
-McpInsightへの貢献を歓迎します。リポジトリへの問題提起やプルリクエストをお気軽にお寄せください。

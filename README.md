@@ -1,82 +1,12 @@
 ﻿# CSharpMcpServer
 
-C#で実装されたModel Context Protocol (MCP) サーバーは、Claude Desktop APIの拡張機能を提供します。このプロジェクトは、ファイルシステム操作、ハードウェア情報取得、ウェブコンテンツ取得、時間取得などの様々なツールを提供します。
-
-## Tools
-
-- [FileSystem](FileSystem/) - ファイルシステム操作機能を提供
-  - ファイルの読み書き、編集、削除機能
-  - ディレクトリの作成、フォルダ構造の取得機能
-  - ファイルやディレクトリの移動機能
-  - ZIP圧縮・解凍機能
-  - ファイル/フォルダを規定アプリで開く機能
-  - 指定アプリケーションでファイルを開く機能
-  - ファイル関連付け情報の取得機能
-
-- [Command](Command/) - シェルコマンド実行機能を提供
-  - PowerShellでのコマンド実行
-  - WSL Bashでのコマンド実行
-  - タイムアウト管理機能付き
-
-- [HardwareInfoRetriever](HardwareInfoRetriever/) - PC情報やネットワーク情報を取得
-  - OS、CPU、GPU、メモリ、ディスク情報の取得（キャッシュ機能付き）
-  - 特定コンポーネントの選択的な情報取得
-  - キャッシュ情報の強制更新機能
-
-- [Time](Time/) - 現在の時刻を取得
-  - システムのローカル時間をフォーマット済みの文字列として提供
-
-- [Web](Web/) - Webブラウザとの連携機能を提供
-  - 規定のブラウザでURLを開く機能
-
-- [WebFetch](WebFetch/) - URLからコンテンツを取得
-  - ウェブページから広告やナビゲーションを除去したメインコンテンツを抽出
-  - セマンティックHTML要素を利用したコンテンツ特定アルゴリズム
-
-- [NetworkInfo](NetworkInfo/) - ネットワーク情報を取得
-  - ネットワークアダプター情報の取得
-  - TCP接続情報の取得
-
-- [VisualStudio](VisualStudio/) - Visual Studio情報を取得
-  - 実行中のVisual Studioインスタンス情報の取得
-  - アクティブなソリューション情報の取得
-  - 現在選択されているファイルの内容を取得
-  - 開いているすべてのファイル情報の取得
-
-- [Rss](Rss/) - RSSフィードを処理
-  - 複数のRSSフィードを同時に処理
-  - マークダウン形式のリンクとして出力
-
-- [CreateMcpServer](CreateMcpServer/) - MCPサーバープロジェクトの作成ツール
-  - 新規MCPサーバープロジェクトの自動生成（CreateMcpServerProject）
-  - プロジェクト作成と設定に関するプロンプト機能（CreateMcpServerPrompts）
-  - 必要なフォルダ構造とプロジェクトファイルの自動作成
-  - ソリューションへの自動統合
-
-## ユーティリティ
-
-- [McpInsight](CSharpMcpServer.Utility/McpInsight/) - MCPサーバーのデバッグ・監視ツール
-  - MCPクライアントとサーバー間の通信をリアルタイムに監視
-  - MCPサーバーコマンドのインタラクティブなテスト
-  - メッセージを分析しやすい形式で表示
-  - stdioベースのMCPサーバー開発のあらゆるフェーズで利用可能
-
-## 使用方法
-
-各ツールは独立したdotnetプロジェクトとして実装されており、それぞれをビルドして使用できます。詳細な使用方法は各ツールのREADMEを参照してください。
-
-## ライセンス
-このプロジェクトは[MITライセンス](LICENSE.txt)の下でライセンスされています。
-
----
-
-# CSharpMcpServer (English)
+[日本語版はこちら](README.ja.md)
 
 The C# implementation of Model Context Protocol (MCP) servers provides extensions for the Claude Desktop API. This project offers various tools for file system operations, hardware information retrieval, web content fetching, and time retrieval.
 
 ## Tools
 
-- [FileSystem](FileSystem/) - Provides file system operation functionality
+- [FileSystem](FileSystem/README.md) - Provides file system operation functionality
   - File reading, writing, editing, and deletion
   - Directory creation and folder structure retrieval
   - Moving files and directories
@@ -85,41 +15,41 @@ The C# implementation of Model Context Protocol (MCP) servers provides extension
   - Opening files with specific applications
   - Retrieving file association information
 
-- [Command](Command/) - Provides shell command execution functionality
+- [Command](Command/README.md) - Provides shell command execution functionality
   - Command execution in PowerShell
   - Command execution in WSL Bash
   - Timeout management capability
 
-- [HardwareInfoRetriever](HardwareInfoRetriever/) - Retrieves PC and network information
+- [HardwareInfoRetriever](HardwareInfoRetriever/README.md) - Retrieves PC and network information
   - OS, CPU, GPU, memory, and disk information (with caching support)
   - Selective retrieval of specific hardware components
   - Forced refresh of cached hardware information
 
-- [Time](Time/) - Retrieves the current time
+- [Time](Time/README.md) - Retrieves the current time
   - Provides the system's local time as a formatted string
 
-- [Web](Web/) - Provides web browser integration functionality
+- [Web](Web/README.md) - Provides web browser integration functionality
   - Opening URLs in the default browser
 
-- [WebFetch](WebFetch/) - Retrieves content from URLs
+- [WebFetch](WebFetch/README.md) - Retrieves content from URLs
   - Extracts main content from web pages by removing ads and navigation
   - Content identification algorithm using semantic HTML elements
 
-- [NetworkInfo](NetworkInfo/) - Retrieves network information
+- [NetworkInfo](NetworkInfo/README.md) - Retrieves network information
   - Network adapter information
   - TCP connection information
 
-- [VisualStudio](VisualStudio/) - Retrieves Visual Studio information
+- [VisualStudio](VisualStudio/README.md) - Retrieves Visual Studio information
   - Information about running Visual Studio instances
   - Active solution information
   - Content of currently selected files
   - Information about all open files
 
-- [Rss](Rss/) - Processes RSS feeds
+- [Rss](Rss/README.md) - Processes RSS feeds
   - Processes multiple RSS feeds simultaneously
   - Outputs content as markdown-formatted links
 
-- [CreateMcpServer](CreateMcpServer/) - Tool for creating MCP server projects
+- [CreateMcpServer](CreateMcpServer/README.md) - Tool for creating MCP server projects
   - Automatic generation of new MCP server projects (CreateMcpServerProject)
   - Project creation and configuration prompts (CreateMcpServerPrompts)
   - Automated creation of necessary folder structures and project files
@@ -127,7 +57,7 @@ The C# implementation of Model Context Protocol (MCP) servers provides extension
 
 ## Utilities
 
-- [McpInsight](CSharpMcpServer.Utility/McpInsight/) - Debug and monitoring tool for MCP servers
+- [McpInsight](CSharpMcpServer.Utility/McpInsight/README.md) - Debug and monitoring tool for MCP servers
   - Real-time monitoring of communication between MCP clients and servers
   - Interactive testing of MCP server commands
   - Message display in an easy-to-analyze format
