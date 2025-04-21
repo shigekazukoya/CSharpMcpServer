@@ -64,7 +64,7 @@ CreateMcpServerProject("MyFeature");
 
 This performs the following operations:
 
-1. Creates the `C:\Projects\MCPServer\CSharpMcpServer\MyFeature` directory
+1. Creates the `C:\Projects\MCPServer\CSharpMcpServer\Servers\MyFeature` directory
 2. Initializes a new console project using the `dotnet new console` command
 3. Adds a reference to the `CSharpMcpServer.Common` project
 4. Creates a basic `Program.cs` with MCP functionality enabled

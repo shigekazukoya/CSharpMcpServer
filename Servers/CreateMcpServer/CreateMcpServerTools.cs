@@ -134,9 +134,10 @@ public static class {feature}Tools
         errorMessage = string.Empty;
         // ルートフォルダにある .sln ファイルを検索
         string rootPath = CreateMcpServerPath.RootFolderPath;
-        string[] slnFiles = Directory.GetFiles(rootPath, "*.sln");
+        var parentDir = Directory.GetParent(rootPath);
+        var slnFiles = parentDir.GetFiles("*.sln").Select(x=>x.FullName); 
 
-        if (slnFiles.Length == 0)
+        if (slnFiles.Count() == 0)
         {
             errorMessage ="ソリューションファイルが見つかりませんでした。";
             return false;

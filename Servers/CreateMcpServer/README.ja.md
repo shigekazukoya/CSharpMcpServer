@@ -64,7 +64,7 @@ CreateMcpServerProject("MyFeature");
 
 これにより、以下の処理が実行されます：
 
-1. `C:\Projects\MCPServer\CSharpMcpServer\MyFeature` ディレクトリの作成
+1. `C:\Projects\MCPServer\CSharpMcpServer\Servers\MyFeature` ディレクトリの作成
 2. `dotnet new console` コマンドによる新規コンソールプロジェクトの初期化
 3. `CSharpMcpServer.Common` プロジェクト参照の追加
 4. MCP機能が使える基本的な `Program.cs` の作成
