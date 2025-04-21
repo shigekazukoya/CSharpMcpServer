@@ -4,7 +4,15 @@
 
 The C# implementation of Model Context Protocol (MCP) servers provides extensions for the Claude Desktop API. This project offers various tools for file system operations, hardware information retrieval, web content fetching, and time retrieval.
 
-## Tools
+## Utilities
+
+- [McpInsight](McpInsight/README.md) - Debug and monitoring tool for MCP servers
+  - Real-time monitoring of communication between MCP clients and servers
+  - Interactive testing of MCP server commands
+  - Message display in an easy-to-analyze format
+  - Usable in all phases of stdio-based MCP server development
+
+## Servers
 
 - [FileSystem](FileSystem/Servers/README.md) - Provides file system operation functionality
   - File reading, writing, editing, and deletion
@@ -54,14 +62,6 @@ The C# implementation of Model Context Protocol (MCP) servers provides extension
   - Project creation and configuration prompts (CreateMcpServerPrompts)
   - Automated creation of necessary folder structures and project files
   - Automatic integration with solutions
-
-## Utilities
-
-- [McpInsight](CSharpMcpServer.Utility/McpInsight/Servers/README.md) - Debug and monitoring tool for MCP servers
-  - Real-time monitoring of communication between MCP clients and servers
-  - Interactive testing of MCP server commands
-  - Message display in an easy-to-analyze format
-  - Usable in all phases of stdio-based MCP server development
 
 ## Usage
 
