@@ -41,7 +41,7 @@ To use with Claude Desktop, add the following configuration to your `claude_desk
             "args": [
                 "run",
                 "--project",
-                "absolute\\path\\to\\CSharpMCPServer\\Rss",
+                "absolute\\path\\to\\CSharpMCPServer\\Servers\\Rss",
                 "--no-build",
                 "--",
                 "https://example.com/rss"

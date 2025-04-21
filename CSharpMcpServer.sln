@@ -5,6 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ソリューション項目", "ソリューション項目", "{61CB45F7-7447-410E-934E-3B040F21D5B9}"
 	ProjectSection(SolutionItems) = preProject
+		README.ja.md = README.ja.md
 		README.md = README.md
 	EndProjectSection
 EndProject

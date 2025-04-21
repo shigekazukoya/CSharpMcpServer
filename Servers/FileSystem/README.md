@@ -182,7 +182,7 @@ To use with Claude Desktop, add the following configuration to your `claude_desk
             "args": [
                 "run",
                 "--project",
-                "absolute\\path\\to\\CSharpMCPServer\\FileSystem",
+                "absolute\\path\\to\\CSharpMCPServer\\Servers\\FileSystem",
                 "--no-build",
                 "--",
                 "/path/to/other/allowed/dir"

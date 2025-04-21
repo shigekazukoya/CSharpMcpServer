@@ -30,7 +30,7 @@ Gets the current system time and returns it as a formatted string:
             "args": [
                 "run",
                 "--project",
-                "absolute\\path\\to\\CSharpMCPServer\\Time",
+                "absolute\\path\\to\\CSharpMCPServer\\Servers\\Time",
                 "--no-build"
             ]
         }

@@ -74,7 +74,7 @@ To use with Claude Desktop, add the following configuration to your `claude_desk
             "args": [
                 "run",
                 "--project",
-                "absolute\\path\\to\\CSharpMCPServer\\Command",
+                "absolute\\path\\to\\CSharpMCPServer\\Servers\\Command",
                 "--no-build",
                 "--"
             ]

@@ -50,7 +50,7 @@ Claude Desktopで使用するには、以下の設定を`claude_desktop_config.j
             "args": [
                 "run",
                 "--project",
-                "absolute\\path\\to\\CSharpMCPServer\\NetworkInfo",
+                "absolute\\path\\to\\CSharpMCPServer\\Servers\\NetworkInfo",
                 "--no-build",
                 "--"
             ]

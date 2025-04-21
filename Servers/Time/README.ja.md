@@ -30,7 +30,7 @@ public static string GetCurrentTime()
             "args": [
                 "run",
                 "--project",
-                "absolute\\path\\to\\CSharpMCPServer\\Time",
+                "absolute\\path\\to\\CSharpMCPServer\\Servers\\Time",
                 "--no-build"
             ]
         }
