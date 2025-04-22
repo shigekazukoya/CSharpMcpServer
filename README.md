@@ -14,54 +14,32 @@ The C# implementation of Model Context Protocol (MCP) servers provides extension
 
 ## Servers
 
-- [FileSystem](FileSystem/Servers/README.md) - Provides file system operation functionality
+- [FileSystem](Servers/FileSystem/README.md) - Provides file system operation functionality
   - File reading, writing, editing, and deletion
   - Directory creation and folder structure retrieval
-  - Moving files and directories
   - ZIP compression and extraction
   - Opening files/folders with default applications
-  - Opening files with specific applications
-  - Retrieving file association information
 
-- [Command](Command/Servers/README.md) - Provides shell command execution functionality
-  - Command execution in PowerShell
-  - Command execution in WSL Bash
-  - Timeout management capability
+- [PowerShell](Servers/PowerShell/README.md) - Provides a secure interface for PowerShell command execution
 
-- [HardwareInfoRetriever](HardwareInfoRetriever/Servers/README.md) - Retrieves PC and network information
-  - OS, CPU, GPU, memory, and disk information (with caching support)
-  - Selective retrieval of specific hardware components
-  - Forced refresh of cached hardware information
+- [HardwareInfoRetriever](Servers/HardwareInfoRetriever/README.md) - OS, CPU, GPU, memory, and disk information
 
-- [Time](Time/Servers/README.md) - Retrieves the current time
-  - Provides the system's local time as a formatted string
+- [Time](Servers/Time/README.md) - Retrieves the current time
 
-- [Web](Web/Servers/README.md) - Provides web browser integration functionality
-  - Opening URLs in the default browser
+- [Web](Servers/Web/README.md) - Opening URLs in the default browser
 
-- [WebFetch](WebFetch/Servers/README.md) - Retrieves content from URLs
-  - Extracts main content from web pages by removing ads and navigation
+- [WebFetch](Servers/WebFetch/README.md) - Extracts main content from web pages by removing ads and navigation
   - Content identification algorithm using semantic HTML elements
 
-- [NetworkInfo](NetworkInfo/Servers/README.md) - Retrieves network information
-  - Network adapter information
-  - TCP connection information
+- [NetworkInfo](Servers/NetworkInfo/README.md) - Retrieves network adapter and TCP connection information
 
-- [VisualStudio](VisualStudio/Servers/README.md) - Retrieves Visual Studio information
-  - Information about running Visual Studio instances
-  - Active solution information
+- [VisualStudio](Servers/VisualStudio/README.md) - Retrieves Visual Studio information
   - Content of currently selected files
   - Information about all open files
 
-- [Rss](Rss/Servers/README.md) - Processes RSS feeds
-  - Processes multiple RSS feeds simultaneously
-  - Outputs content as markdown-formatted links
+- [Rss](Servers/Rss/README.md) - Processes RSS feeds
 
-- [CreateMcpServer](CreateMcpServer/Servers/README.md) - Tool for creating MCP server projects
-  - Automatic generation of new MCP server projects (CreateMcpServerProject)
-  - Project creation and configuration prompts (CreateMcpServerPrompts)
-  - Automated creation of necessary folder structures and project files
-  - Automatic integration with solutions
+- [CreateMcpServer](Servers/CreateMcpServer/README.md) - Tool for creating MCP server projects
 
 ## Usage
 

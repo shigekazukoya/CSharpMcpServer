@@ -32,8 +32,8 @@ namespace CreateMcpServer
         [McpServerPrompt, Description("プロジェクトのREADME.mdファイルを更新するためのプロンプト")]
         public static string UpdateReadMePrompt(string feature)
         {
-            var featureToolsPath = Path.Combine(CreateMcpServerPath.RootFolderPath, feature, $"{feature}Tools.cs");
-            var featureReadMePath = Path.Combine(CreateMcpServerPath.RootFolderPath, feature, $"README.md");
+            var featureToolsPath = Path.Combine(CreateMcpServerPath.RootFolderPath, "Servers",feature, $"{feature}Tools.cs");
+            var featureReadMePath = Path.Combine(CreateMcpServerPath.RootFolderPath, "Servers", feature, $"README.md");
             var createMcpServerToolsPath = Path.Combine(CreateMcpServerPath.RootFolderPath,  nameof(CreateMcpServer), $"{nameof(CreateMcpServerTools)}.cs");
 
             var rootReadMe = Path.Combine(CreateMcpServerPath.RootFolderPath,   $"README.md");

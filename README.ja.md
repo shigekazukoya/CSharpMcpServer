@@ -14,54 +14,32 @@ C#で実装されたModel Context Protocol (MCP) サーバーは、Claude Deskto
 
 ## Servers
 
-- [FileSystem](FileSystem/Servers/README.ja.md) - ファイルシステム操作機能を提供
+- [FileSystem](Servers/FileSystem/README.ja.md) - ファイルシステム操作機能を提供
   - ファイルの読み書き、編集、削除機能
   - ディレクトリの作成、フォルダ構造の取得機能
-  - ファイルやディレクトリの移動機能
   - ZIP圧縮・解凍機能
   - ファイル/フォルダを規定アプリで開く機能
-  - 指定アプリケーションでファイルを開く機能
-  - ファイル関連付け情報の取得機能
 
-- [Command](Command/Servers/README.ja.md) - シェルコマンド実行機能を提供
-  - PowerShellでのコマンド実行
-  - WSL Bashでのコマンド実行
-  - タイムアウト管理機能付き
+- [PowerShell](Servers/PowerShell/README.ja.md) - PowerShellコマンド実行のためのセキュアなインターフェースを提供
 
-- [HardwareInfoRetriever](HardwareInfoRetriever/Servers/README.ja.md) - PC情報やネットワーク情報を取得
-  - OS、CPU、GPU、メモリ、ディスク情報の取得（キャッシュ機能付き）
-  - 特定コンポーネントの選択的な情報取得
-  - キャッシュ情報の強制更新機能
+- [HardwareInfoRetriever](Servers/HardwareInfoRetriever/README.ja.md) - OS、CPU、GPU、メモリ、ディスク情報の取得
 
-- [Time](Time/Servers/README.ja.md) - 現在の時刻を取得
-  - システムのローカル時間をフォーマット済みの文字列として提供
+- [Time](Servers/Time/README.ja.md) - 現在の時刻を取得
 
-- [Web](Web/Servers/README.ja.md) - Webブラウザとの連携機能を提供
-  - 規定のブラウザでURLを開く機能
+- [Web](Servers/Web/README.ja.md) - 規定のブラウザでURLを開く機能
 
-- [WebFetch](WebFetch/Servers/README.ja.md) - URLからコンテンツを取得
-  - ウェブページから広告やナビゲーションを除去したメインコンテンツを抽出
+- [WebFetch](Servers/WebFetch/README.ja.md) - ウェブページから広告やナビゲーションを除去したメインコンテンツを抽出
   - セマンティックHTML要素を利用したコンテンツ特定アルゴリズム
 
-- [NetworkInfo](NetworkInfo/Servers/README.ja.md) - ネットワーク情報を取得
-  - ネットワークアダプター情報の取得
-  - TCP接続情報の取得
+- [NetworkInfo](Servers/NetworkInfo/README.ja.md) - ネットワークアダプター情報やTCP接続情報の取得
 
-- [VisualStudio](VisualStudio/Servers/README.ja.md) - Visual Studio情報を取得
-  - 実行中のVisual Studioインスタンス情報の取得
-  - アクティブなソリューション情報の取得
+- [VisualStudio](Servers/VisualStudio/README.ja.md) - Visual Studio情報を取得
   - 現在選択されているファイルの内容を取得
   - 開いているすべてのファイル情報の取得
 
-- [Rss](Rss/Servers/README.ja.md) - RSSフィードを処理
-  - 複数のRSSフィードを同時に処理
-  - マークダウン形式のリンクとして出力
+- [Rss](Servers/Rss/README.ja.md) - RSSフィードを処理
 
-- [CreateMcpServer](CreateMcpServer/Servers/README.ja.md) - MCPサーバープロジェクトの作成ツール
-  - 新規MCPサーバープロジェクトの自動生成（CreateMcpServerProject）
-  - プロジェクト作成と設定に関するプロンプト機能（CreateMcpServerPrompts）
-  - 必要なフォルダ構造とプロジェクトファイルの自動作成
-  - ソリューションへの自動統合
+- [CreateMcpServer](Servers/CreateMcpServer/README.ja.md) - MCPサーバープロジェクトの作成ツール
 
 ## 使用方法
 

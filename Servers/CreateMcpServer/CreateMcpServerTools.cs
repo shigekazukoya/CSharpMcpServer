@@ -62,7 +62,7 @@ public static class CreateMcpServerTools
         }
         
         // CSharpMcpServer.Common プロジェクト参照を追加
-        AddProjectReference(folderPath, Path.Combine(CreateMcpServerPath.RootFolderPath, "CSharpMcpServer.Common", "CSharpMcpServer.Common.csproj"));
+        AddProjectReference(folderPath, Path.Combine(CreateMcpServerPath.RootFolderPath, "Servers","CSharpMcpServer.Common", "CSharpMcpServer.Common.csproj"));
     }
     
     private static void AddProjectReference(string projectPath, string referenceProjectPath)
