@@ -17,12 +17,14 @@ public static class MemoryBankProjectOperations
         return Directory.Exists(Path.Combine(RootPath, projectName));
     }
 
-    public static string EnsureProject(string projectName, string description = "")
+    public static string EnsureProject(string projectName, string description = "", bool initializeGit = true)
     {
         MemoryBankValidation.ValidateProjectName(projectName);
         string projectPath = Path.Combine(RootPath, projectName);
         
-        if (!Directory.Exists(projectPath))
+        bool isNewProject = !Directory.Exists(projectPath);
+        
+        if (isNewProject)
         {
             Directory.CreateDirectory(projectPath);
             
@@ -32,7 +34,8 @@ public static class MemoryBankProjectOperations
                 Name = projectName,
                 Description = description,
                 CreatedAt = DateTime.Now,
-                LastUpdatedAt = DateTime.Now
+                LastUpdatedAt = DateTime.Now,
+                GitEnabled = initializeGit
             };
             
             string metadataPath = Path.Combine(projectPath, ".project-info.json");
@@ -40,6 +43,19 @@ public static class MemoryBankProjectOperations
             { 
                 WriteIndented = true 
             }));
+            
+            // 新規プロジェクトの場合、Gitリポジトリを初期化
+            if (initializeGit && GitOperations.IsGitAvailable())
+            {
+                GitOperations.InitializeRepository(projectPath);
+                
+                // 最新のコミットハッシュを取得して保存
+                projectInfo.LastCommitHash = GitOperations.GetLatestCommitHash(projectPath);
+                File.WriteAllText(metadataPath, JsonSerializer.Serialize(projectInfo, new JsonSerializerOptions 
+                { 
+                    WriteIndented = true 
+                }));
+            }
         }
         else
         {
@@ -53,6 +69,15 @@ public static class MemoryBankProjectOperations
                     if (projectInfo != null)
                     {
                         projectInfo.LastUpdatedAt = DateTime.Now;
+                        
+                        // 既存プロジェクトでGitが有効化されていない場合、必要に応じて初期化
+                        if (initializeGit && !projectInfo.GitEnabled && GitOperations.IsGitAvailable() && !GitOperations.IsGitRepository(projectPath))
+                        {
+                            GitOperations.InitializeRepository(projectPath);
+                            projectInfo.GitEnabled = true;
+                            projectInfo.LastCommitHash = GitOperations.GetLatestCommitHash(projectPath);
+                        }
+                        
                         File.WriteAllText(metadataPath, JsonSerializer.Serialize(projectInfo, new JsonSerializerOptions 
                         { 
                             WriteIndented = true 

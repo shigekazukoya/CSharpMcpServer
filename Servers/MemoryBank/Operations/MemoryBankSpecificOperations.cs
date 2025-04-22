@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.Json;
 using MemoryBankTools.Models;
 using MemoryBankTools.Utils;
 using MemoryBankTools.Constants;
@@ -39,6 +40,22 @@ public static class MemoryBankSpecificOperations
         if (!Directory.Exists(decisionsPath))
         {
             Directory.CreateDirectory(decisionsPath);
+        }
+        
+        // 初期化後にGitコミット
+        var projectInfo = MemoryBankProjectOperations.GetProjectInfo(projectName);
+        if (projectInfo != null && projectInfo.GitEnabled && GitOperations.IsGitRepository(projectPath))
+        {
+            if (GitOperations.CommitChanges(projectPath, "Initialize MemoryBank project with core files"))
+            {
+                // コミットハッシュを更新
+                projectInfo.LastCommitHash = GitOperations.GetLatestCommitHash(projectPath);
+                string metadataPath = Path.Combine(projectPath, ".project-info.json");
+                File.WriteAllText(metadataPath, JsonSerializer.Serialize(projectInfo, new JsonSerializerOptions 
+                { 
+                    WriteIndented = true 
+                }));
+            }
         }
         
         return new InitializeMemoryBankResponse
@@ -87,6 +104,22 @@ public static class MemoryBankSpecificOperations
         
         // Write updated content
         File.WriteAllText(filePath, content);
+        
+        // アクティブコンテキスト更新後にGitコミット
+        var projectInfo = MemoryBankProjectOperations.GetProjectInfo(projectName);
+        if (projectInfo != null && projectInfo.GitEnabled && GitOperations.IsGitRepository(projectPath))
+        {
+            if (GitOperations.CommitChanges(projectPath, "Update active context"))
+            {
+                // コミットハッシュを更新
+                projectInfo.LastCommitHash = GitOperations.GetLatestCommitHash(projectPath);
+                string metadataPath = Path.Combine(projectPath, ".project-info.json");
+                File.WriteAllText(metadataPath, JsonSerializer.Serialize(projectInfo, new JsonSerializerOptions 
+                { 
+                    WriteIndented = true 
+                }));
+            }
+        }
     }
     
     public static void UpdateProgress(string projectName, List<string> completed, List<string> inProgress, List<string> planned, List<string> issues)
@@ -136,6 +169,22 @@ public static class MemoryBankSpecificOperations
         
         // Write updated content
         File.WriteAllText(filePath, content);
+        
+        // 進捗更新後にGitコミット
+        var projectInfo = MemoryBankProjectOperations.GetProjectInfo(projectName);
+        if (projectInfo != null && projectInfo.GitEnabled && GitOperations.IsGitRepository(projectPath))
+        {
+            if (GitOperations.CommitChanges(projectPath, "Update project progress tracking"))
+            {
+                // コミットハッシュを更新
+                projectInfo.LastCommitHash = GitOperations.GetLatestCommitHash(projectPath);
+                string metadataPath = Path.Combine(projectPath, ".project-info.json");
+                File.WriteAllText(metadataPath, JsonSerializer.Serialize(projectInfo, new JsonSerializerOptions 
+                { 
+                    WriteIndented = true 
+                }));
+            }
+        }
     }
     
     public static void RecordDecision(string projectName, string title, string description, string rationale, List<string> alternatives)
@@ -194,6 +243,22 @@ public static class MemoryBankSpecificOperations
             string decision = $"- [{title}](decisions/{fileName}) - {DateTime.Now:yyyy-MM-dd}";
             content = MemoryBankUtils.UpdateMarkdownSection(content, "Active Decisions", decision, true);
             File.WriteAllText(activeContextPath, content);
+        }
+        
+        // 決定記録後にGitコミット
+        var projectInfo = MemoryBankProjectOperations.GetProjectInfo(projectName);
+        if (projectInfo != null && projectInfo.GitEnabled && GitOperations.IsGitRepository(projectPath))
+        {
+            if (GitOperations.CommitChanges(projectPath, $"Record decision: {title}"))
+            {
+                // コミットハッシュを更新
+                projectInfo.LastCommitHash = GitOperations.GetLatestCommitHash(projectPath);
+                string metadataPath = Path.Combine(projectPath, ".project-info.json");
+                File.WriteAllText(metadataPath, JsonSerializer.Serialize(projectInfo, new JsonSerializerOptions 
+                { 
+                    WriteIndented = true 
+                }));
+            }
         }
     }
     
@@ -259,6 +324,22 @@ public static class MemoryBankSpecificOperations
             createdFiles.Add(fileName);
         }
         
+        // 修復後にGitコミット
+        var projectInfo = MemoryBankProjectOperations.GetProjectInfo(projectName);
+        if (projectInfo != null && projectInfo.GitEnabled && GitOperations.IsGitRepository(projectPath))
+        {
+            if (GitOperations.CommitChanges(projectPath, $"Repair memory bank: add {createdFiles.Count} missing files"))
+            {
+                // コミットハッシュを更新
+                projectInfo.LastCommitHash = GitOperations.GetLatestCommitHash(projectPath);
+                string metadataPath = Path.Combine(projectPath, ".project-info.json");
+                File.WriteAllText(metadataPath, JsonSerializer.Serialize(projectInfo, new JsonSerializerOptions 
+                { 
+                    WriteIndented = true 
+                }));
+            }
+        }
+        
         return createdFiles;
     }
     
@@ -310,6 +391,13 @@ public static class MemoryBankSpecificOperations
         sb.AppendLine();
         sb.AppendLine("<!-- Add project-specific preferences here -->");
         sb.AppendLine();
+        sb.AppendLine("## Git Integration");
+        sb.AppendLine();
+        sb.AppendLine("This project is automatically version controlled with Git.");
+        sb.AppendLine("- All changes to files are automatically committed");
+        sb.AppendLine("- Each operation creates a separate commit with descriptive message");
+        sb.AppendLine("- Git history can be used to track and review project changes");
+        sb.AppendLine();
         sb.AppendLine("## Learning");
         sb.AppendLine();
         sb.AppendLine("<!-- Document key insights and patterns learned during development -->");
@@ -317,6 +405,23 @@ public static class MemoryBankSpecificOperations
         try
         {
             File.WriteAllText(filePath, sb.ToString());
+            
+            // Clinerules作成後にGitコミット
+            var projectInfo = MemoryBankProjectOperations.GetProjectInfo(projectName);
+            if (projectInfo != null && projectInfo.GitEnabled && GitOperations.IsGitRepository(projectPath))
+            {
+                if (GitOperations.CommitChanges(projectPath, "Create Cline rules file"))
+                {
+                    // コミットハッシュを更新
+                    projectInfo.LastCommitHash = GitOperations.GetLatestCommitHash(projectPath);
+                    string metadataPath = Path.Combine(projectPath, ".project-info.json");
+                    File.WriteAllText(metadataPath, JsonSerializer.Serialize(projectInfo, new JsonSerializerOptions 
+                    { 
+                        WriteIndented = true 
+                    }));
+                }
+            }
+            
             return true;
         }
         catch (Exception)

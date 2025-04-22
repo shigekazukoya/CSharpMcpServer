@@ -16,6 +16,16 @@ public class ProjectInfo
     
     [JsonPropertyName("lastUpdatedAt")]
     public DateTime LastUpdatedAt { get; set; } = DateTime.Now;
+    
+    // Git関連の情報を追加
+    [JsonPropertyName("gitEnabled")]
+    public bool GitEnabled { get; set; } = true; // デフォルトでGit有効に
+    
+    [JsonPropertyName("lastCommitHash")]
+    public string? LastCommitHash { get; set; }
+    
+    [JsonPropertyName("remoteUrl")]
+    public string? RemoteUrl { get; set; }
 }
 
 public class FileInfo

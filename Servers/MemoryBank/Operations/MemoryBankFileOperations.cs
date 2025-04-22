@@ -1,4 +1,5 @@
-﻿using MemoryBankTools.Models;
+﻿using System.Text.Json;
+using MemoryBankTools.Models;
 using MemoryBankTools.Validation;
 using FileInfo = MemoryBankTools.Models.FileInfo;
 
@@ -101,6 +102,22 @@ public static class MemoryBankFileOperations
         
         File.WriteAllText(fullPath, content);
         
+        // ファイル作成後にGitコミット
+        var projectInfo = MemoryBankProjectOperations.GetProjectInfo(projectName);
+        if (projectInfo != null && projectInfo.GitEnabled && GitOperations.IsGitRepository(projectPath))
+        {
+            if (GitOperations.CommitChanges(projectPath, $"Create file: {filePath}"))
+            {
+                // コミットハッシュを更新
+                projectInfo.LastCommitHash = GitOperations.GetLatestCommitHash(projectPath);
+                string metadataPath = Path.Combine(projectPath, ".project-info.json");
+                File.WriteAllText(metadataPath, JsonSerializer.Serialize(projectInfo, new JsonSerializerOptions 
+                { 
+                    WriteIndented = true 
+                }));
+            }
+        }
+        
         return new WriteFileResponse 
         { 
             Success = true, 
@@ -156,6 +173,26 @@ public static class MemoryBankFileOperations
 
         File.WriteAllText(fullPath, content);
         
+        // ファイル更新/作成後にGitコミット
+        var projectInfo = MemoryBankProjectOperations.GetProjectInfo(projectName);
+        if (projectInfo != null && projectInfo.GitEnabled && GitOperations.IsGitRepository(projectPath))
+        {
+            string commitMessage = fileExists 
+                ? $"Update file: {filePath}" 
+                : $"Create file: {filePath}";
+                
+            if (GitOperations.CommitChanges(projectPath, commitMessage))
+            {
+                // コミットハッシュを更新
+                projectInfo.LastCommitHash = GitOperations.GetLatestCommitHash(projectPath);
+                string metadataPath = Path.Combine(projectPath, ".project-info.json");
+                File.WriteAllText(metadataPath, JsonSerializer.Serialize(projectInfo, new JsonSerializerOptions 
+                { 
+                    WriteIndented = true 
+                }));
+            }
+        }
+        
         return new UpdateFileResponse 
         { 
             Success = true, 
@@ -205,13 +242,31 @@ public static class MemoryBankFileOperations
         if (!MemoryBankValidation.IsValidProjectName(projectName) || !MemoryBankValidation.IsValidFilePath(filePath))
             return false;
             
-        string fullPath = Path.Combine(RootPath, projectName, filePath);
+        string projectPath = Path.Combine(RootPath, projectName);
+        string fullPath = Path.Combine(projectPath, filePath);
         if (!File.Exists(fullPath))
             return false;
             
         try
         {
             File.Delete(fullPath);
+            
+            // ファイル削除後にGitコミット
+            var projectInfo = MemoryBankProjectOperations.GetProjectInfo(projectName);
+            if (projectInfo != null && projectInfo.GitEnabled && GitOperations.IsGitRepository(projectPath))
+            {
+                if (GitOperations.CommitChanges(projectPath, $"Delete file: {filePath}"))
+                {
+                    // コミットハッシュを更新
+                    projectInfo.LastCommitHash = GitOperations.GetLatestCommitHash(projectPath);
+                    string metadataPath = Path.Combine(projectPath, ".project-info.json");
+                    File.WriteAllText(metadataPath, JsonSerializer.Serialize(projectInfo, new JsonSerializerOptions 
+                    { 
+                        WriteIndented = true 
+                    }));
+                }
+            }
+            
             return true;
         }
         catch (Exception)
@@ -250,6 +305,28 @@ public static class MemoryBankFileOperations
         try
         {
             File.Copy(sourceFullPath, targetFullPath, overwrite);
+            
+            // ファイルコピー後にGitコミット (ターゲットプロジェクトのみ)
+            var projectInfo = MemoryBankProjectOperations.GetProjectInfo(targetProjectName);
+            if (projectInfo != null && projectInfo.GitEnabled)
+            {
+                string targetProjectPath = Path.Combine(RootPath, targetProjectName);
+                if (GitOperations.IsGitRepository(targetProjectPath))
+                {
+                    string commitMessage = $"Copy file from '{sourceProjectName}/{sourceFilePath}' to '{targetFilePath}'";
+                    if (GitOperations.CommitChanges(targetProjectPath, commitMessage))
+                    {
+                        // コミットハッシュを更新
+                        projectInfo.LastCommitHash = GitOperations.GetLatestCommitHash(targetProjectPath);
+                        string metadataPath = Path.Combine(targetProjectPath, ".project-info.json");
+                        File.WriteAllText(metadataPath, JsonSerializer.Serialize(projectInfo, new JsonSerializerOptions 
+                        { 
+                            WriteIndented = true 
+                        }));
+                    }
+                }
+            }
+            
             return true;
         }
         catch (Exception)
