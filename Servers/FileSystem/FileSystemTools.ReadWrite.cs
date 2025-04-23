@@ -123,7 +123,7 @@ public static partial class FileSystemTools
     }
 
     [McpServerTool, Description("Gets basic file information for multiple files.")]
-    public static async Task<List<Dictionary<string, object>>> GetMultipleFilesInfoAsync([Description("The full paths to the files to be read.")] string[] filePaths,
+    public static async Task<List<Dictionary<string, object>>> GetMultipleFilesInfoAsync([Description("The full paths to the files to be read.")] List<string> filePaths,
         [Description("The encoding to use (utf-8, shift-jis, etc.). Default is utf-8.")] string encodingName = "utf-8")
     {
         Encoding encoding = ResolveEncoding(encodingName);
