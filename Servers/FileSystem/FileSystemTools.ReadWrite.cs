@@ -122,110 +122,34 @@ public static partial class FileSystemTools
         return FileOpelationResult.Success(filePath);
     }
 
-    /// <summary>
-    /// ファイル情報を取得します
-    /// </summary>
-    /// <param name="filePath">ファイルパス</param>
-    /// <param name="encodingName">エンコーディング名（デフォルト: utf-8）</param>
-    /// <param name="includeContent">ファイル内容を含めるかどうか</param>
-    /// <returns>ファイル情報（JSON形式）</returns>
-    [McpServerTool, Description("Gets file information including path, line count and content.")]
-    public static async Task<string> GetFileInfoAsync(
-        [Description("The full path to the file to be read.")] string filePath,
-        [Description("The encoding to use (utf-8, shift-jis, etc.). Default is utf-8.")] string encodingName = "utf-8",
-        [Description("Whether to include file content in the result. For large files, setting this to false is recommended.")] bool includeContent = true)
+    [McpServerTool, Description("Gets basic file information for multiple files.")]
+    public static async Task<List<Dictionary<string, object>>> GetMultipleFilesInfoAsync([Description("The full paths to the files to be read.")] string[] filePaths,
+        [Description("The encoding to use (utf-8, shift-jis, etc.). Default is utf-8.")] string encodingName = "utf-8")
     {
-        // セキュリティチェック
-        Security.ValidateIsAllowedDirectory(filePath);
-
-        // ファイル情報の取得
-        var fileInfo = new FileInfo(filePath);
-        bool isLargeFile = fileInfo.Length > Constants.MaxFileSize;
         Encoding encoding = ResolveEncoding(encodingName);
+        var results = new List<Dictionary<string, object>>();
 
-        // 基本情報を構築
-        var resultDict = new Dictionary<string, object>
+        foreach (string filePath in filePaths)
         {
-            ["status"] = "Success",
-            ["filePath"] = filePath,
-            ["fileName"] = Path.GetFileName(filePath),
-            ["extension"] = Path.GetExtension(filePath),
-            ["directoryName"] = Path.GetDirectoryName(filePath),
-            ["newLine"] = Environment.NewLine,
-            ["fileSize"] = fileInfo.Length,
-            ["fileSizeFormatted"] = FormatFileSize(fileInfo.Length),
-            ["lastModified"] = fileInfo.LastWriteTime,
-            ["created"] = fileInfo.CreationTime,
-            ["isLargeFile"] = isLargeFile,
-            ["contentIncluded"] = includeContent && (!isLargeFile),
-            ["isReadOnly"] = fileInfo.IsReadOnly,
-            ["encoding"] = encodingName
-        };
+            // セキュリティチェック
+            Security.ValidateIsAllowedDirectory(filePath);
 
-        // 内容と行数の取得
-        if (resultDict["contentIncluded"].Equals(true))
-        {
-            // 小さいファイルの場合：一括読み込み
-            string content = await File.ReadAllTextAsync(filePath, encoding);
-            int lineCount = content.Split(new[] { "\\r\\n", "\\r", "\\n" }, StringSplitOptions.None).Length;
-
-            resultDict["lineCount"] = lineCount;
-            resultDict["content"] = content;
-        }
-        else
-        {
-            // 大きいファイルまたは内容が不要な場合：行数のみを効率的にカウント
-            int lineCount = 0;
-            using (var reader = new StreamReader(new FileStream(filePath, FileMode.Open, FileAccess.Read), encoding, false, 4096, true))
+            // 最小限の情報を構築
+            var resultDict = new Dictionary<string, object>
             {
-                // バッファを使ってより効率的に読み込む
-                char[] buffer = new char[8192];
-                int readChars;
-                bool previousWasCR = false;
+                ["filePath"] = filePath,
+                ["fileName"] = Path.GetFileName(filePath)
+            };
 
-                while ((readChars = await reader.ReadAsync(buffer, 0, buffer.Length)) > 0)
-                {
-                    for (int i = 0; i < readChars; i++)
-                    {
-                        char c = buffer[i];
-                        if (c == '\n')
-                        {
-                            lineCount++;
-                            previousWasCR = false;
-                        }
-                        else if (c == '\r')
-                        {
-                            previousWasCR = true;
-                        }
-                        else if (previousWasCR)
-                        {
-                            lineCount++;
-                            previousWasCR = false;
-                        }
-                    }
-                }
+            // 内容と行数の取得
+            string content = await File.ReadAllTextAsync(filePath, encoding);
+            resultDict["lineCount"] = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None).Length;
+            resultDict["content"] = content;
 
-                // 最後の行に改行がない場合
-                if (readChars > 0 && !previousWasCR && buffer[readChars - 1] != '\n' && buffer[readChars - 1] != '\r')
-                {
-                    lineCount++;
-                }
-                // 最後の文字がCRの場合
-                else if (previousWasCR)
-                {
-                    lineCount++;
-                }
-            }
-
-            resultDict["lineCount"] = lineCount;
-            resultDict["content"] = null;
+            results.Add(resultDict);
         }
 
-        return JsonSerializer.Serialize(resultDict, new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+        return results;
     }
 
     /// <summary>
@@ -462,28 +386,6 @@ public static partial class FileSystemTools
             // 不明なエンコーディング名の場合はデフォルトを使用
             return Constants.DefaultEncoding;
         }
-    }
-
-    /// <summary>
-    /// ファイルサイズを人間が読みやすい形式にフォーマットします
-    /// </summary>
-    private static string FormatFileSize(long bytes)
-    {
-        string[] sizeSuffixes = { "B", "KB", "MB", "GB", "TB", "PB" };
-
-        if (bytes == 0)
-            return "0 B";
-
-        double formattedSize = bytes;
-        int suffixIndex = 0;
-
-        while (formattedSize >= 1024 && suffixIndex < sizeSuffixes.Length - 1)
-        {
-            formattedSize /= 1024;
-            suffixIndex++;
-        }
-
-        return $"{formattedSize:0.##} {sizeSuffixes[suffixIndex]}";
     }
 
     /// <summary>
