@@ -82,7 +82,7 @@ public static partial class FileSystemTools
     /// </summary>
     /// <param name="path">ファイルパス</param>
     /// <returns>関連付け情報（JSON形式）</returns>
-    [McpServerTool, Description("ファイルに関連付けられたアプリケーション情報を取得します")]
+    //[McpServerTool, Description("ファイルに関連付けられたアプリケーション情報を取得します")]
     public static string GetFileAssociation(
         [Description("ファイルパス")] string path)
     {
@@ -179,7 +179,7 @@ public static partial class FileSystemTools
     /// <param name="applicationPath">使用するアプリケーションのパス</param>
     /// <param name="arguments">追加のコマンドライン引数</param>
     /// <returns>処理結果（JSON形式）</returns>
-    [McpServerTool, Description("指定したプログラムでファイルを開きます")]
+    //[McpServerTool, Description("指定したプログラムでファイルを開きます")]
     public static string OpenWithSpecificApplication(
         [Description("開くファイルのパス")] string filePath,
         [Description("使用するアプリケーションのパス")] string applicationPath,

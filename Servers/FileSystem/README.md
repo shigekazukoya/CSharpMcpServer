@@ -15,8 +15,6 @@ The CSharpMcpServer FileSystem is a module that provides file system operation t
 - **Zip**: Compress a directory or file to create a ZIP file
 - **Unzip**: Extract a ZIP file
 - **OpenWithApplication**: Open a file or folder with the default application
-- **OpenWithSpecificApplication**: Open a file with a specific application
-- **GetFileAssociation**: Get information about applications associated with a file
 
 ## API Details
 
@@ -40,7 +38,7 @@ Writes content to a file:
 - **filePath**: The path to the file to edit
 - **content**: The content to write to the file
 - **encodingName**: The encoding to use (utf-8, shift-jis, etc.). Default is utf-8
-- **Returns**: JSON-formatted result message
+- **Returns**: result message
 
 ### EditFile
 ```csharp
@@ -53,7 +51,7 @@ Edits a file by replacing specified text:
 - **newString**: The text to replace it with
 - **encodingName**: The encoding to use (utf-8, shift-jis, etc.). Default is utf-8
 - **replacementCount**: The expected number of replacements to perform. Defaults to 1 if not specified.
-- **Returns**: JSON-formatted result message
+- **Returns**: result message
 
 ### Delete
 ```csharp
@@ -140,27 +138,6 @@ Opens a file with a specific application:
 - **arguments**: Additional command line arguments
 - **Returns**: JSON-formatted result message
 
-### GetFileAssociation
-```csharp
-public static string GetFileAssociation(string path)
-```
-Gets information about applications associated with a file:
-- **Description**: Gets application information associated with a file
-- **path**: The file path
-- **Returns**: JSON-formatted association information Unzip(string filePath)
-```
-Extracts a ZIP file:
-- **filePath**: The path to the ZIP file to extract
-- **Returns**: Message about the extraction result
-
-### Launch
-```csharp
-public static string Launch(string path)
-```
-Opens a file or folder with the default application:
-- **path**: The path to the file or folder
-- **Returns**: Message about the execution result
-
 ## Usage
 
 ### Compilation and Building
@@ -185,7 +162,7 @@ To use with Claude Desktop, add the following configuration to your `claude_desk
                 "absolute\\path\\to\\CSharpMCPServer\\Servers\\FileSystem",
                 "--no-build",
                 "--",
-                "/path/to/other/allowed/dir"
+                "/path/to/allowed/dir"
             ]
         }
     }

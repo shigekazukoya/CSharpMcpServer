@@ -10,161 +10,116 @@ namespace FileSystem.Tools;
 public static partial class FileSystemTools
 {
     [McpServerTool, Description("Write file")]
-    public static string WriteFile(
+    public static FileOpelationResult WriteFile(
         [Description("The path to the file to edit")] string filePath,
         [Description("The text to replace it with")] string content,
         [Description("The encoding to use (utf-8, shift-jis, etc.). Default is utf-8.")] string encodingName = "utf-8")
     {
-        try
+        // セキュリティチェック
+        Security.ValidateIsAllowedDirectory(filePath);
+
+        // 親ディレクトリが存在しない場合は作成
+        string directory = Path.GetDirectoryName(filePath);
+        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
         {
-            // セキュリティチェック
-            Security.ValidateIsAllowedDirectory(filePath);
-
-            if (!Security.HasWritePermission(filePath))
-            {
-                return $"書き込み権限がありません: {filePath}";
-            }
-
-            // ファイルが存在しない場合の処理
-            bool fileExists = File.Exists(filePath);
-            var encoding = ResolveEncoding(encodingName);
-
-            // 親ディレクトリが存在しない場合は作成
-            string directory = Path.GetDirectoryName(filePath);
-            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
-            var normalizedContent = NormalizeLineEndings(content);
-            File.WriteAllText(filePath, normalizedContent, encoding);
-
-            return JsonSerializer.Serialize(new
-            {
-                Status = "Success",
-                FilePath = filePath,
-                Message = fileExists ? $"ファイルを正常に編集しました: {filePath}" : $"ファイルを正常に作成しました: {filePath}",
-                Timestamp = DateTime.Now
-            });
+            Directory.CreateDirectory(directory);
         }
-        catch (Exception ex)
-        {
-            return ExceptionHandling.FormatExceptionAsJson(ex, "ファイル書き込み");
-        }
+
+        var normalizedContent = NormalizeLineEndings(content);
+        var encoding = ResolveEncoding(encodingName);
+        File.WriteAllText(filePath, normalizedContent, encoding);
+
+        return FileOpelationResult.Success(filePath);
     }
+
     [McpServerTool, Description("Edit file by replacing specified text")]
-    public static string EditFile(
+    public static FileOpelationResult EditFile(
         [Description("The path to the file to edit")] string filePath,
         [Description("The text to replace")] string oldString,
         [Description("The text to replace it with")] string newString,
                 [Description("The encoding to use (utf-8, shift-jis, etc.). Default is utf-8.")] string encodingName = "utf-8",
         [Description("The expected number of replacements to perform. Defaults to 1 if not specified.")] int replacementCount = 1)
     {
-        try
+        // セキュリティチェック
+        Security.ValidateIsAllowedDirectory(filePath);
+
+        string content;
+        var encoding = ResolveEncoding(encodingName);
+
+        // 既存ファイルの読み込み - バイナリとして読み込んでエンコーディング変換を避ける
+        byte[] fileBytes = File.ReadAllBytes(filePath);
+        content = encoding.GetString(fileBytes);
+
+        // 空のoldStringの場合は新規ファイル作成として扱う
+        if (!string.IsNullOrEmpty(oldString))
         {
-            // セキュリティチェック
-            Security.ValidateIsAllowedDirectory(filePath);
+            // 改行コードの正規化
+            string normalizedContent = NormalizeLineEndings(content);
+            string normalizedOldString = NormalizeLineEndings(oldString);
+            string normalizedNewString = NormalizeLineEndings(newString);
 
-            if (!Security.HasWritePermission(filePath))
+            // 置換処理
+            int actualReplacements = 0;
+            if (replacementCount == 1)
             {
-                return $"書き込み権限がありません: {filePath}";
-            }
-
-            // ファイルが存在しない場合の処理
-            string content;
-            var encoding = ResolveEncoding(encodingName);
-
-            // 既存ファイルの読み込み - バイナリとして読み込んでエンコーディング変換を避ける
-            byte[] fileBytes = File.ReadAllBytes(filePath);
-            content = encoding.GetString(fileBytes);
-
-            // 空のoldStringの場合は新規ファイル作成として扱う
-            if (!string.IsNullOrEmpty(oldString))
-            {
-                // 改行コードの正規化
-                string normalizedContent = NormalizeLineEndings(content);
-                string normalizedOldString = NormalizeLineEndings(oldString);
-                string normalizedNewString = NormalizeLineEndings(newString);
-
-                // 置換処理
-                int actualReplacements = 0;
-                if (replacementCount == 1)
+                // 単一置換
+                int index = normalizedContent.IndexOf(normalizedOldString);
+                if (index >= 0)
                 {
-                    // 単一置換
-                    int index = normalizedContent.IndexOf(normalizedOldString);
-                    if (index >= 0)
-                    {
-                        normalizedContent = normalizedContent.Substring(0, index) + normalizedNewString + normalizedContent.Substring(index + normalizedOldString.Length);
-                        actualReplacements = 1;
-                        content = normalizedContent; // 正規化されたコンテンツで更新
-                    }
-                }
-                else
-                {
-                    // 置換前の出現回数をカウント
-                    int occurrencesBeforeReplace = CountOccurrences(normalizedContent, normalizedOldString);
-
-                    // 複数置換
-                    string newContent = normalizedContent.Replace(normalizedOldString, normalizedNewString);
-
-                    // 置換後の正確な置換回数を計算
-                    if (normalizedOldString.Length == normalizedNewString.Length)
-                    {
-                        // 同じ長さの場合、出現回数の変化で計算
-                        int occurrencesAfterReplace = CountOccurrences(newContent, normalizedNewString);
-                        actualReplacements = occurrencesBeforeReplace - (occurrencesAfterReplace - occurrencesBeforeReplace);
-                    }
-                    else
-                    {
-                        // 異なる長さの場合、直接置換回数をカウント
-                        actualReplacements = occurrencesBeforeReplace;
-                    }
-
-                    if (replacementCount > 0 && actualReplacements != replacementCount)
-                    {
-                        return JsonSerializer.Serialize(new
-                        {
-                            Status = "Error",
-                            Message = $"予期された置換回数({replacementCount})と実際の置換回数({actualReplacements})が一致しません",
-                            FilePath = filePath
-                        });
-                    }
-
-                    content = newContent;
-                }
-
-                if (actualReplacements == 0)
-                {
-                    return JsonSerializer.Serialize(new
-                    {
-                        Status = "Error",
-                        Message = $"置換対象の文字列が見つかりませんでした",
-                        FilePath = filePath
-                    });
+                    normalizedContent = normalizedContent.Substring(0, index) + normalizedNewString + normalizedContent.Substring(index + normalizedOldString.Length);
+                    actualReplacements = 1;
+                    content = normalizedContent; // 正規化されたコンテンツで更新
                 }
             }
             else
             {
-                // oldStringが空の場合、contentを完全に上書き
-                content = newString;
+                // 置換前の出現回数をカウント
+                int occurrencesBeforeReplace = CountOccurrences(normalizedContent, normalizedOldString);
+
+                // 複数置換
+                string newContent = normalizedContent.Replace(normalizedOldString, normalizedNewString);
+
+                // 置換後の正確な置換回数を計算
+                if (normalizedOldString.Length == normalizedNewString.Length)
+                {
+                    // 同じ長さの場合、出現回数の変化で計算
+                    int occurrencesAfterReplace = CountOccurrences(newContent, normalizedNewString);
+                    actualReplacements = occurrencesBeforeReplace - (occurrencesAfterReplace - occurrencesBeforeReplace);
+                }
+                else
+                {
+                    // 異なる長さの場合、直接置換回数をカウント
+                    actualReplacements = occurrencesBeforeReplace;
+                }
+
+                if (replacementCount > 0 && actualReplacements != replacementCount)
+                {
+                    return FileOpelationResult.Failed(
+                        filePath,
+                        $"予期された置換回数({replacementCount})と実際の置換回数({actualReplacements})が一致しません");
+                }
+
+                content = newContent;
             }
 
-            // 非同期で書き込み - バイナリに変換して書き込む
-            byte[] outputBytes = encoding.GetBytes(content);
-            File.WriteAllBytes(filePath, outputBytes);
-
-            return JsonSerializer.Serialize(new
+            if (actualReplacements == 0)
             {
-                Status = "Success",
-                FilePath = filePath,
-                Message =  $"ファイルを正常に編集しました: {filePath}",
-                Timestamp = DateTime.Now
-            });
+                return FileOpelationResult.Failed(
+                    filePath,
+                     $"置換対象の文字列が見つかりませんでした");
+            }
         }
-        catch (Exception ex)
+        else
         {
-            return ExceptionHandling.FormatExceptionAsJson(ex, "ファイル編集");
+            // oldStringが空の場合、contentを完全に上書き
+            content = newString;
         }
+
+        // 非同期で書き込み - バイナリに変換して書き込む
+        byte[] outputBytes = encoding.GetBytes(content);
+        File.WriteAllBytes(filePath, outputBytes);
+
+        return FileOpelationResult.Success(filePath);
     }
 
     /// <summary>
@@ -180,122 +135,97 @@ public static partial class FileSystemTools
         [Description("The encoding to use (utf-8, shift-jis, etc.). Default is utf-8.")] string encodingName = "utf-8",
         [Description("Whether to include file content in the result. For large files, setting this to false is recommended.")] bool includeContent = true)
     {
-        try
+        // セキュリティチェック
+        Security.ValidateIsAllowedDirectory(filePath);
+
+        // ファイル情報の取得
+        var fileInfo = new FileInfo(filePath);
+        bool isLargeFile = fileInfo.Length > Constants.MaxFileSize;
+        Encoding encoding = ResolveEncoding(encodingName);
+
+        // 基本情報を構築
+        var resultDict = new Dictionary<string, object>
         {
-            // セキュリティチェック
-            Security.ValidateIsAllowedDirectory(filePath);
+            ["status"] = "Success",
+            ["filePath"] = filePath,
+            ["fileName"] = Path.GetFileName(filePath),
+            ["extension"] = Path.GetExtension(filePath),
+            ["directoryName"] = Path.GetDirectoryName(filePath),
+            ["newLine"] = Environment.NewLine,
+            ["fileSize"] = fileInfo.Length,
+            ["fileSizeFormatted"] = FormatFileSize(fileInfo.Length),
+            ["lastModified"] = fileInfo.LastWriteTime,
+            ["created"] = fileInfo.CreationTime,
+            ["isLargeFile"] = isLargeFile,
+            ["contentIncluded"] = includeContent && (!isLargeFile),
+            ["isReadOnly"] = fileInfo.IsReadOnly,
+            ["encoding"] = encodingName
+        };
 
-            if (!File.Exists(filePath))
+        // 内容と行数の取得
+        if (resultDict["contentIncluded"].Equals(true))
+        {
+            // 小さいファイルの場合：一括読み込み
+            string content = await File.ReadAllTextAsync(filePath, encoding);
+            int lineCount = content.Split(new[] { "\\r\\n", "\\r", "\\n" }, StringSplitOptions.None).Length;
+
+            resultDict["lineCount"] = lineCount;
+            resultDict["content"] = content;
+        }
+        else
+        {
+            // 大きいファイルまたは内容が不要な場合：行数のみを効率的にカウント
+            int lineCount = 0;
+            using (var reader = new StreamReader(new FileStream(filePath, FileMode.Open, FileAccess.Read), encoding, false, 4096, true))
             {
-                return JsonSerializer.Serialize(new
+                // バッファを使ってより効率的に読み込む
+                char[] buffer = new char[8192];
+                int readChars;
+                bool previousWasCR = false;
+
+                while ((readChars = await reader.ReadAsync(buffer, 0, buffer.Length)) > 0)
                 {
-                    Status = "Error",
-                    Message = $"ファイルが見つかりません: {filePath}"
-                });
-            }
-
-            if (!Security.HasReadPermission(filePath))
-            {
-                return JsonSerializer.Serialize(new
-                {
-                    Status = "Error",
-                    Message = $"読み取り権限がありません: {filePath}"
-                });
-            }
-
-            // ファイル情報の取得
-            var fileInfo = new FileInfo(filePath);
-            bool isLargeFile = fileInfo.Length > Constants.MaxFileSize;
-            Encoding encoding = ResolveEncoding(encodingName);
-
-            // 基本情報を構築
-            var resultDict = new Dictionary<string, object>
-            {
-                ["status"] = "Success",
-                ["filePath"] = filePath,
-                ["fileName"] = Path.GetFileName(filePath),
-                ["extension"] = Path.GetExtension(filePath),
-                ["directoryName"] = Path.GetDirectoryName(filePath),
-                ["newLine"] = Environment.NewLine,
-                ["fileSize"] = fileInfo.Length,
-                ["fileSizeFormatted"] = FormatFileSize(fileInfo.Length),
-                ["lastModified"] = fileInfo.LastWriteTime,
-                ["created"] = fileInfo.CreationTime,
-                ["isLargeFile"] = isLargeFile,
-                ["contentIncluded"] = includeContent && (!isLargeFile),
-                ["isReadOnly"] = fileInfo.IsReadOnly,
-                ["encoding"] = encodingName
-            };
-
-            // 内容と行数の取得
-            if (resultDict["contentIncluded"].Equals(true))
-            {
-                // 小さいファイルの場合：一括読み込み
-                string content = await File.ReadAllTextAsync(filePath, encoding);
-                int lineCount = content.Split(new[] { "\\r\\n", "\\r", "\\n" }, StringSplitOptions.None).Length;
-
-                resultDict["lineCount"] = lineCount;
-                resultDict["content"] = content;
-            }
-            else
-            {
-                // 大きいファイルまたは内容が不要な場合：行数のみを効率的にカウント
-                int lineCount = 0;
-                using (var reader = new StreamReader(new FileStream(filePath, FileMode.Open, FileAccess.Read), encoding, false, 4096, true))
-                {
-                    // バッファを使ってより効率的に読み込む
-                    char[] buffer = new char[8192];
-                    int readChars;
-                    bool previousWasCR = false;
-
-                    while ((readChars = await reader.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                    for (int i = 0; i < readChars; i++)
                     {
-                        for (int i = 0; i < readChars; i++)
+                        char c = buffer[i];
+                        if (c == '\n')
                         {
-                            char c = buffer[i];
-                            if (c == '\n')
-                            {
-                                lineCount++;
-                                previousWasCR = false;
-                            }
-                            else if (c == '\r')
-                            {
-                                previousWasCR = true;
-                            }
-                            else if (previousWasCR)
-                            {
-                                lineCount++;
-                                previousWasCR = false;
-                            }
+                            lineCount++;
+                            previousWasCR = false;
                         }
-                    }
-
-                    // 最後の行に改行がない場合
-                    if (readChars > 0 && !previousWasCR && buffer[readChars - 1] != '\n' && buffer[readChars - 1] != '\r')
-                    {
-                        lineCount++;
-                    }
-                    // 最後の文字がCRの場合
-                    else if (previousWasCR)
-                    {
-                        lineCount++;
+                        else if (c == '\r')
+                        {
+                            previousWasCR = true;
+                        }
+                        else if (previousWasCR)
+                        {
+                            lineCount++;
+                            previousWasCR = false;
+                        }
                     }
                 }
 
-                resultDict["lineCount"] = lineCount;
-                resultDict["content"] = null;
+                // 最後の行に改行がない場合
+                if (readChars > 0 && !previousWasCR && buffer[readChars - 1] != '\n' && buffer[readChars - 1] != '\r')
+                {
+                    lineCount++;
+                }
+                // 最後の文字がCRの場合
+                else if (previousWasCR)
+                {
+                    lineCount++;
+                }
             }
 
-            return JsonSerializer.Serialize(resultDict, new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+            resultDict["lineCount"] = lineCount;
+            resultDict["content"] = null;
         }
-        catch (Exception ex)
+
+        return JsonSerializer.Serialize(resultDict, new JsonSerializerOptions
         {
-            return ExceptionHandling.FormatExceptionAsJson(ex, "ファイル情報取得");
-        }
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
     }
 
     /// <summary>
@@ -578,4 +508,28 @@ public static partial class FileSystemTools
     }
 
     #endregion
+}
+
+public class FileOpelationResult
+{
+    public string FilePath { get; }
+    public string Message { get; }
+    public DateTime Timestamp { get; }
+
+    private FileOpelationResult(string filePath, string message)
+    {
+        FilePath = filePath;
+        Message = message;
+        Timestamp = DateTime.Now;
+    }
+
+    public static FileOpelationResult Failed(string filePath,string message)
+    {
+        return new FileOpelationResult(filePath, message);
+    }
+    public static FileOpelationResult Success(string filePath)
+    {
+        return new FileOpelationResult(filePath, "Success");
+    }
+
 }

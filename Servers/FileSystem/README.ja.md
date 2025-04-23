@@ -15,8 +15,6 @@ CSharpMcpServer FileSystem は、Model Context Protocol (MCP) サーバーのフ
 - **Zip**: ディレクトリまたはファイルを圧縮してZIPファイルを作成
 - **Unzip**: ZIPファイルを展開
 - **OpenWithApplication**: ファイルまたはフォルダを規定のアプリケーションで開く
-- **OpenWithSpecificApplication**: 指定したプログラムでファイルを開く
-- **GetFileAssociation**: ファイルに関連付けられたアプリケーション情報を取得
 
 ## API詳細
 
@@ -40,7 +38,7 @@ public static string WriteFile(string filePath, string content, string encodingN
 - **filePath**: 編集するファイルのパス
 - **content**: ファイルに書き込む内容
 - **encodingName**: 使用するエンコーディング（utf-8, shift-jis, etc.）、デフォルトはutf-8
-- **戻り値**: 処理結果のJSONメッセージ
+- **戻り値**: 処理結果
 
 ### EditFile
 ```csharp
@@ -53,7 +51,7 @@ public static async Task<string> EditFileAsync(string filePath, string oldString
 - **newString**: 置換後のテキスト
 - **encodingName**: 使用するエンコーディング（utf-8, shift-jis, etc.）、デフォルトはutf-8
 - **replacementCount**: 実行する置換の回数（デフォルト: 1）
-- **戻り値**: 処理結果のJSONメッセージ
+- **戻り値**: 処理結果
 
 ### Delete
 ```csharp
@@ -129,39 +127,6 @@ public static string OpenWithApplication(string path, string verb = "open")
 - **verb**: 使用する動詞（open, edit, print など）、デフォルトは"open"
 - **戻り値**: 処理結果のJSONメッセージ
 
-### OpenWithSpecificApplication
-```csharp
-public static string OpenWithSpecificApplication(string filePath, string applicationPath, string arguments = "")
-```
-指定したプログラムでファイルを開きます：
-- **説明**: 指定したプログラムでファイルを開きます
-- **filePath**: 開くファイルのパス
-- **applicationPath**: 使用するアプリケーションのパス
-- **arguments**: 追加のコマンドライン引数
-- **戻り値**: 処理結果のJSONメッセージ
-
-### GetFileAssociation
-```csharp
-public static string GetFileAssociation(string path)
-```
-ファイルに関連付けられたアプリケーション情報を取得します：
-- **説明**: ファイルに関連付けられたアプリケーション情報を取得します
-- **path**: ファイルパス
-- **戻り値**: 関連付け情報のJSONメッセージ
-public static string Unzip(string filePath)
-```
-ZIPファイルを展開します：
-- **filePath**: 展開するZIPファイルのパス
-- **戻り値**: 展開結果のメッセージ
-
-### Launch
-```csharp
-public static string Launch(string path)
-```
-ファイルまたはフォルダを規定のアプリケーションで開きます：
-- **path**: ファイルまたはフォルダのパス
-- **戻り値**: 実行結果のメッセージ
-
 ## 使用方法
 
 ### コンパイルとビルド
@@ -186,7 +151,7 @@ Claude Desktopで使用するには、以下の設定を`claude_desktop_config.j
                 "absolute\\path\\to\\CSharpMCPServer\\Servers\\FileSystem",
                 "--no-build",
                 "--",
-                "/path/to/other/allowed/dir"
+                "/path/to/allowed/dir"
             ]
         }
     }
