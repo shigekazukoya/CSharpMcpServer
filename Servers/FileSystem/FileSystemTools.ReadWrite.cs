@@ -123,11 +123,11 @@ public static partial class FileSystemTools
     }
 
     [McpServerTool, Description("Gets basic file information for multiple files.")]
-    public static async Task<List<Dictionary<string, object>>> GetMultipleFilesInfoAsync([Description("The full paths to the files to be read.")] List<string> filePaths,
+    public static async Task<List<Dictionary<string, string>>> GetMultipleFilesInfoAsync([Description("The full paths to the files to be read.")] List<string>? filePaths,
         [Description("The encoding to use (utf-8, shift-jis, etc.). Default is utf-8.")] string encodingName = "utf-8")
     {
         Encoding encoding = ResolveEncoding(encodingName);
-        var results = new List<Dictionary<string, object>>();
+        var results = new List<Dictionary<string, string>>();
 
         foreach (string filePath in filePaths)
         {
@@ -135,7 +135,7 @@ public static partial class FileSystemTools
             Security.ValidateIsAllowedDirectory(filePath);
 
             // 最小限の情報を構築
-            var resultDict = new Dictionary<string, object>
+            var resultDict = new Dictionary<string, string>
             {
                 ["filePath"] = filePath,
                 ["fileName"] = Path.GetFileName(filePath)
@@ -143,7 +143,7 @@ public static partial class FileSystemTools
 
             // 内容と行数の取得
             string content = await File.ReadAllTextAsync(filePath, encoding);
-            resultDict["lineCount"] = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None).Length;
+            resultDict["lineCount"] = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None).Length.ToString();
             resultDict["content"] = content;
 
             results.Add(resultDict);
