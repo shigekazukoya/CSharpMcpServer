@@ -4,6 +4,17 @@
 
 C#で実装されたModel Context Protocol (MCP) サーバーは、Claude Desktop APIの拡張機能を提供します。このプロジェクトは、ファイルシステム操作、ハードウェア情報取得、ウェブコンテンツ取得、時間取得などの様々なツールを提供します。
 
+## 使用方法
+
+```Powershell
+git clone https://github.com/shigekazukoya/CSharpMcpServer
+cd CSharpMcpServer
+dotnet build
+```
+
+MCPの各ツールは独立したdotnetプロジェクトとして実装されており、それぞれをビルドして使用できます。
+詳細な使用方法は各ツールのServers/READMEを参照してください。
+
 ## Utilities
 
 - [McpInsight](McpInsight/README.ja.md) - MCPサーバーのデバッグ・監視ツール
@@ -41,9 +52,6 @@ C#で実装されたModel Context Protocol (MCP) サーバーは、Claude Deskto
 
 - [CreateMcpServer](Servers/CreateMcpServer/README.ja.md) - MCPサーバープロジェクトの作成ツール
 
-## 使用方法
-
-各ツールは独立したdotnetプロジェクトとして実装されており、それぞれをビルドして使用できます。詳細な使用方法は各ツールのServers/READMEを参照してください。
 
 ## ライセンス
 このプロジェクトは[MITライセンス](LICENSE.txt)の下でライセンスされています。

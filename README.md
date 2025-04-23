@@ -4,6 +4,16 @@
 
 The C# implementation of Model Context Protocol (MCP) servers provides extensions for the Claude Desktop API. This project offers various tools for file system operations, hardware information retrieval, web content fetching, and time retrieval.
 
+## Usage
+
+```Powershell
+git clone https://github.com/shigekazukoya/CSharpMcpServer
+cd CSharpMcpServer
+dotnet build
+```
+
+Each McpServer tool is implemented as an independent dotnet project and can be built and used separately. For detailed usage instructions, please refer to the Servers/README of each tool.
+
 ## Utilities
 
 - [McpInsight](McpInsight/README.md) - Debug and monitoring tool for MCP servers
@@ -40,10 +50,6 @@ The C# implementation of Model Context Protocol (MCP) servers provides extension
 - [Rss](Servers/Rss/README.md) - Processes RSS feeds
 
 - [CreateMcpServer](Servers/CreateMcpServer/README.md) - Tool for creating MCP server projects
-
-## Usage
-
-Each tool is implemented as an independent dotnet project and can be built and used separately. For detailed usage instructions, please refer to the Servers/README of each tool.
 
 ## License
 This project is licensed under the [MIT License](LICENSE.txt).
