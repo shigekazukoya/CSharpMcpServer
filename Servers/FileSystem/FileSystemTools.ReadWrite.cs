@@ -9,7 +9,7 @@ namespace FileSystem.Tools;
 [McpServerToolType]
 public static partial class FileSystemTools
 {
-    [McpServerTool, Description("Write file")]
+    [McpServerTool, Description("Write file - Use this method to create a new file or completely overwrite the contents of an existing file. For replacing specific text within a file, use EditFile instead.")]
     public static FileOpelationResult WriteFile(
         [Description("The path to the file to edit")] string filePath,
         [Description("The text to replace it with")] string content,
@@ -32,7 +32,7 @@ public static partial class FileSystemTools
         return FileOpelationResult.Success(filePath);
     }
 
-    [McpServerTool, Description("Edit file by replacing specified text")]
+    [McpServerTool, Description("Edit file by replacing specified text - Use this method to replace specific text within an existing file. For completely overwriting file contents, use WriteFile instead.")]
     public static FileOpelationResult EditFile(
         [Description("The path to the file to edit")] string filePath,
         [Description("The text to replace")] string oldString,
