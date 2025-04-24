@@ -122,7 +122,7 @@ public static partial class FileSystemTools
         return FileOpelationResult.Success(filePath);
     }
 
-    [McpServerTool, Description("Gets basic file information for multiple files.")]
+    [McpServerTool, Description("Gets basic file information for multiple files. filePaths requires a List")]
     public static async Task<List<Dictionary<string, string>>> GetMultipleFilesInfoAsync([Description("The full paths to the files to be read.")] List<string>? filePaths,
         [Description("The encoding to use (utf-8, shift-jis, etc.). Default is utf-8.")] string encodingName = "utf-8")
     {
