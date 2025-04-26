@@ -2,6 +2,7 @@
 using ModelContextProtocol.Server;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Text;
 namespace CreateMcpServerTools;
 
 [McpServerToolType]
@@ -22,7 +23,14 @@ public static class CreateMcpServerTools
         Directory.CreateDirectory(folderPath);
 
         // プロジェクトファイルを作成
-        CreateConsoleProject(folderPath, feature);
+        try
+        {
+            CreateConsoleProject(folderPath, feature);
+        }
+        catch (Exception ex)
+        {
+            return ex.Message;
+        }
 
         // Program.cs ファイルを作成
         CreateProgramCs(folderPath);
@@ -62,7 +70,8 @@ public static class CreateMcpServerTools
         }
         
         // CSharpMcpServer.Common プロジェクト参照を追加
-        AddProjectReference(folderPath, Path.Combine(CreateMcpServerPath.RootFolderPath, "..","Common", "CSharpMcpServer.Common.csproj"));
+        AddProjectReference(folderPath, "Microsoft.Extensions.Hosting");
+        AddProjectReference(folderPath,  "ModelContextProtocol --prerelease");
     }
     
     private static void AddProjectReference(string projectPath, string referenceProjectPath)
@@ -70,19 +79,37 @@ public static class CreateMcpServerTools
         var processInfo = new ProcessStartInfo
         {
             FileName = "dotnet",
-            Arguments = $"add reference {referenceProjectPath}",
+            Arguments = $"add package {referenceProjectPath}",
             WorkingDirectory = projectPath,
-            RedirectStandardOutput = true,
             UseShellExecute = false,
-            CreateNoWindow = true
+            CreateNoWindow = true,
+            RedirectStandardError = true,
+            RedirectStandardOutput = true,
+            
         };
 
+        var output = new StringBuilder();
+        var error = new StringBuilder();
         using (var process = Process.Start(processInfo))
         {
-            process.WaitForExit();
-            if (process.ExitCode != 0)
+            process.OutputDataReceived += (sender, args) =>
             {
-                Console.WriteLine($"プロジェクト参照 {referenceProjectPath} の追加に失敗しました。");
+                output.AppendLine(args.Data);
+            };
+
+            process.ErrorDataReceived += (sender, args) =>
+            {
+                error.AppendLine(args.Data);
+            };
+            // これらのメソッドを呼び出して非同期読み取りを開始
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+
+            process.WaitForExit();
+            if(process.ExitCode != 0) 
+            { 
+
+            throw new Exception(output.ToString() + "-----"+error.ToString());
             }
         }
     }

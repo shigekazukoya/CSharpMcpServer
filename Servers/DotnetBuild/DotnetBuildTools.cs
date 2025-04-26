@@ -6,10 +6,10 @@ using System.Xml.Linq;
 using System.IO;
 using System.Collections.Generic;
 
-namespace MSBuildTools;
+namespace DotnetBuildTools;
 
 [McpServerToolType]
-public static class MSBuildTools
+public static class DotnetBuildTools
 {
     [McpServerTool, Description("指定されたプロジェクトやソリューションをdotnetコマンドを使用してビルドします")]
     public static BuildResult BuildProject(string projectPath, string configuration = "Debug", string framework = "", bool verbose = false)
