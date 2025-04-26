@@ -51,5 +51,7 @@ Each McpServer tool is implemented as an independent dotnet project and can be b
 
 - [CreateMcpServer](Servers/CreateMcpServer/README.md) - Tool for creating MCP server projects
 
+- [DotnetBuild](Servers/DotnetBuild/README.md) - Tool for building and analyzing .NET projects
+
 ## License
 This project is licensed under the [MIT License](LICENSE.txt).

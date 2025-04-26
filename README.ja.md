@@ -52,6 +52,7 @@ MCPの各ツールは独立したdotnetプロジェクトとして実装され�
 
 - [CreateMcpServer](Servers/CreateMcpServer/README.ja.md) - MCPサーバープロジェクトの作成ツール
 
+- [DotnetBuild](Servers/DotnetBuild/README.ja.md) - .NETプロジェクトのビルドと分析のためのツール
 
 ## ライセンス
 このプロジェクトは[MITライセンス](LICENSE.txt)の下でライセンスされています。
