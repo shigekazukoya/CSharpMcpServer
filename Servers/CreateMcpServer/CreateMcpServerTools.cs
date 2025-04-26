@@ -70,8 +70,7 @@ public static class CreateMcpServerTools
         }
         
         // CSharpMcpServer.Common プロジェクト参照を追加
-        AddProjectReference(folderPath, "Microsoft.Extensions.Hosting");
-        AddProjectReference(folderPath,  "ModelContextProtocol --prerelease");
+        AddProjectReference(folderPath, Path.Combine(CreateMcpServerPath.RootFolderPath, "..","Common", "CSharpMcpServer.Common.csproj"));
     }
     
     private static void AddProjectReference(string projectPath, string referenceProjectPath)
@@ -79,37 +78,19 @@ public static class CreateMcpServerTools
         var processInfo = new ProcessStartInfo
         {
             FileName = "dotnet",
-            Arguments = $"add package {referenceProjectPath}",
+            Arguments = $"add reference {referenceProjectPath}",
             WorkingDirectory = projectPath,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            RedirectStandardError = true,
             RedirectStandardOutput = true,
-            
+            UseShellExecute = false,
+            CreateNoWindow = true
         };
 
-        var output = new StringBuilder();
-        var error = new StringBuilder();
         using (var process = Process.Start(processInfo))
         {
-            process.OutputDataReceived += (sender, args) =>
-            {
-                output.AppendLine(args.Data);
-            };
-
-            process.ErrorDataReceived += (sender, args) =>
-            {
-                error.AppendLine(args.Data);
-            };
-            // これらのメソッドを呼び出して非同期読み取りを開始
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
-
             process.WaitForExit();
-            if(process.ExitCode != 0) 
-            { 
-
-            throw new Exception(output.ToString() + "-----"+error.ToString());
+            if (process.ExitCode != 0)
+            {
+                Console.WriteLine($"プロジェクト参照 {referenceProjectPath} の追加に失敗しました。");
             }
         }
     }
