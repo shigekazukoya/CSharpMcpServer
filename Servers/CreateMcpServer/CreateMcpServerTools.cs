@@ -102,6 +102,11 @@ public static class CreateMcpServerTools
 using Microsoft.Extensions.Hosting;
 
 var builder = Host.CreateEmptyApplicationBuilder(settings: null);
+builder.Logging.AddConsole(options =>
+{
+    options.LogToStandardErrorThreshold = LogLevel.Trace;
+});
+
 
 builder.Services.AddMcpServer()
     .WithStdioServerTransport()
