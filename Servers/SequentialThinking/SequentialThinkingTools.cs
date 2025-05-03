@@ -1,199 +1,129 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using ModelContextProtocol.Server;
 using System.ComponentModel;
-using System.Linq;
-using ModelContextProtocol.Server;
+using System.Text.Json;
 
 namespace SequentialThinking
 {
-    [McpServerToolType]
-    public class SequentialThinkingTools
+    public class ThoughtData
     {
-        // Session storage
-        private static readonly Dictionary<string, SequentialThinkingSession> _sessions = new();
+        public string Thought { get; set; }
+        public int ThoughtNumber { get; set; }
+        public int TotalThoughts { get; set; }
+        public bool IsRevision { get; set; }
+        public int? RevisesThought { get; set; }
+        public int? BranchFromThought { get; set; }
+        public string BranchId { get; set; }
+        public bool? NeedsMoreThoughts { get; set; }
+        public bool NextThoughtNeeded { get; set; }
 
-        [McpServerTool]
-        [Description("Initiates a new sequential thinking process with a specified problem statement")]
-        public static SequentialThinkingResponse InitiateThinking(string problemStatement, string sessionId = null)
+        public string ToStringFormattedText()
         {
-            sessionId ??= Guid.NewGuid().ToString();
-            
-            var session = new SequentialThinkingSession
+            string prefix;
+            string context = "";
+
+            if (this.IsRevision)
             {
-                SessionId = sessionId,
-                ProblemStatement = problemStatement,
-                Thoughts = new List<Thought>(),
-                CurrentStage = ThinkingStage.ProblemDefinition,
-                CreatedAt = DateTime.UtcNow
-            };
-            
-            _sessions[sessionId] = session;
-            
-            return new SequentialThinkingResponse
+                prefix = "🔄 Revision";
+                context = $" (revising thought {this.RevisesThought})";
+            }
+            else if (this.BranchFromThought.HasValue)
             {
-                SessionId = sessionId,
-                Message = "Sequential thinking process initiated",
-                CurrentStage = session.CurrentStage,
-                NextRecommendedAction = StageRecommendations.GetForStage(session.CurrentStage)
-            };
+                prefix = "🌿 Branch";
+                context = $" (from thought {this.BranchFromThought}, ID: {this.BranchId})";
+            }
+            else
+            {
+                prefix = "💭 Thought";
+            }
+
+            string header = $"{prefix} {this.ThoughtNumber}/{this.TotalThoughts}{context}";
+            int borderLength = Math.Max(header.Length, this.Thought.Length) + 4;
+            string border = new string('─', borderLength);
+
+            return $@"
+┌{border}┐
+│ {header.PadRight(borderLength - 2)} │
+├{border}┤
+│ {this.Thought.PadRight(borderLength - 2)} │
+└{border}┘";
         }
 
-        [McpServerTool]
-        [Description("Adds a new thought to the sequential thinking process")]
-        public static SequentialThinkingResponse AddThought(string sessionId, string content, ThinkingStage? stage = null)
-        {
-            if (!_sessions.TryGetValue(sessionId, out var session))
-            {
-                return new SequentialThinkingResponse { Error = "Session not found" };
-            }
-            
-            var currentStage = stage ?? session.CurrentStage;
-            
-            var thought = new Thought
-            {
-                Id = session.Thoughts.Count + 1,
-                Content = content,
-                Stage = currentStage,
-                CreatedAt = DateTime.UtcNow
-            };
-            
-            session.Thoughts.Add(thought);
-            session.CurrentStage = StageManager.DetermineNextStage(currentStage, session);
-            
-            return new SequentialThinkingResponse
-            {
-                SessionId = sessionId,
-                Message = "Thought added successfully",
-                CurrentStage = session.CurrentStage,
-                NextRecommendedAction = StageRecommendations.GetForStage(session.CurrentStage)
-            };
-        }
+    }
 
-        [McpServerTool]
-        [Description("Retrieves the current state of the sequential thinking process")]
-        public static SequentialThinkingSession GetSession(string sessionId)
-        {
-            if (!_sessions.TryGetValue(sessionId, out var session))
-            {
-                throw new ArgumentException("Session not found");
-            }
-            
-            return session;
-        }
+    public class SequentialThinkingServer
+    {
+        private List<ThoughtData> _thoughtHistory = new List<ThoughtData>();
+        private Dictionary<string, List<ThoughtData>> _branches = new Dictionary<string, List<ThoughtData>>();
 
-        [McpServerTool]
-        [Description("Generates a summary of the entire sequential thinking process")]
-        public static ThinkingSummary GenerateSummary(string sessionId)
+        public object ProcessThought(ThoughtData validatedInput)
         {
-            if (!_sessions.TryGetValue(sessionId, out var session))
+            try
             {
-                throw new ArgumentException("Session not found");
-            }
-            
-            return ThinkingAnalyzer.CreateSummary(session);
-        }
+                if (validatedInput.ThoughtNumber > validatedInput.TotalThoughts)
+                {
+                    validatedInput.TotalThoughts = validatedInput.ThoughtNumber;
+                }
 
-        [McpServerTool]
-        [Description("Revises an existing thought in the sequential thinking process")]
-        public static SequentialThinkingResponse ReviseThought(string sessionId, int thoughtId, string newContent)
-        {
-            if (!_sessions.TryGetValue(sessionId, out var session))
-            {
-                return new SequentialThinkingResponse { Error = "Session not found" };
-            }
-            
-            var thought = session.Thoughts.FirstOrDefault(t => t.Id == thoughtId);
-            if (thought == null)
-            {
-                return new SequentialThinkingResponse { Error = "Thought not found" };
-            }
-            
-            thought.Content = newContent;
-            thought.RevisedAt = DateTime.UtcNow;
-            
-            return new SequentialThinkingResponse
-            {
-                SessionId = sessionId,
-                Message = "Thought revised successfully",
-                CurrentStage = session.CurrentStage,
-                NextRecommendedAction = StageRecommendations.GetForStage(session.CurrentStage)
-            };
-        }
+                _thoughtHistory.Add(validatedInput);
 
-        [McpServerTool]
-        [Description("Creates a new branch of thinking from a specific thought point")]
-        public static SequentialThinkingResponse CreateThoughtBranch(string sessionId, int thoughtId, string branchDescription)
-        {
-            if (!_sessions.TryGetValue(sessionId, out var session))
-            {
-                return new SequentialThinkingResponse { Error = "Session not found" };
-            }
-            
-            var parentThought = session.Thoughts.FirstOrDefault(t => t.Id == thoughtId);
-            if (parentThought == null)
-            {
-                return new SequentialThinkingResponse { Error = "Parent thought not found" };
-            }
-            
-            var branchSessionId = Guid.NewGuid().ToString();
-            var branchSession = new SequentialThinkingSession
-            {
-                SessionId = branchSessionId,
-                ProblemStatement = session.ProblemStatement,
-                Thoughts = session.Thoughts.Where(t => t.Id <= thoughtId).ToList(),
-                CurrentStage = parentThought.Stage,
-                CreatedAt = DateTime.UtcNow,
-                ParentSessionId = sessionId,
-                BranchDescription = branchDescription
-            };
-            
-            _sessions[branchSessionId] = branchSession;
-            
-            return new SequentialThinkingResponse
-            {
-                SessionId = branchSessionId,
-                Message = $"New thought branch created from thought {thoughtId}",
-                CurrentStage = branchSession.CurrentStage,
-                NextRecommendedAction = StageRecommendations.GetForStage(branchSession.CurrentStage)
-            };
-        }
+                if (validatedInput.BranchFromThought.HasValue && !string.IsNullOrEmpty(validatedInput.BranchId))
+                {
+                    if (!_branches.ContainsKey(validatedInput.BranchId))
+                    {
+                        _branches[validatedInput.BranchId] = new List<ThoughtData>();
+                    }
+                    _branches[validatedInput.BranchId].Add(validatedInput);
+                }
 
-        [McpServerTool]
-        [Description("Clears the current sequential thinking session")]
-        public static SequentialThinkingResponse ClearSession(string sessionId)
-        {
-            if (!_sessions.ContainsKey(sessionId))
-            {
-                return new SequentialThinkingResponse { Error = "Session not found" };
+                return new
+                {
+                    thoughtNumber = validatedInput.ThoughtNumber,
+                    totalThoughts = validatedInput.TotalThoughts,
+                    nextThoughtNeeded = validatedInput.NextThoughtNeeded,
+                    branches = _branches.Keys.ToArray(),
+                    thoughtHistoryLength = _thoughtHistory.Count
+                };
             }
-            
-            _sessions.Remove(sessionId);
-            
-            return new SequentialThinkingResponse { Message = "Session cleared successfully" };
-        }
+            catch (Exception ex)
+            {
+                
+                var errorResponse = new[]
+                {
+                    new
+                    {
+                        type = "text",
+                        text = JsonSerializer.Serialize(new
+                        {
+                            error = ex.Message,
+                            status = "failed"
+                        }, new JsonSerializerOptions { WriteIndented = true })
+                    }
+                };
 
-        [McpServerTool]
-        [Description("Evaluates the quality and coherence of the sequential thinking process")]
-        public static ThinkingEvaluation EvaluateThinking(string sessionId)
-        {
-            if (!_sessions.TryGetValue(sessionId, out var session))
-            {
-                throw new ArgumentException("Session not found");
+                return new
+                {
+                    content = errorResponse,
+                    isError = true
+                };
             }
-            
-            return ThinkingAnalyzer.Evaluate(session);
         }
-
-        [McpServerTool]
-        [Description("Suggests the next step to take in the sequential thinking process")]
-        public static NextStepSuggestion SuggestNextStep(string sessionId)
+    }
+    
+    [McpServerToolType]
+    public static class SequentialThinkingTool
+    {
+        private static readonly SequentialThinkingServer _thinkingServer;
+        
+        static SequentialThinkingTool()
         {
-            if (!_sessions.TryGetValue(sessionId, out var session))
-            {
-                throw new ArgumentException("Session not found");
-            }
-            
-            return ThinkingAnalyzer.GenerateNextStepSuggestion(session);
+            _thinkingServer = new SequentialThinkingServer();
+        }
+        
+        [McpServerTool]
+        [Description("A detailed tool for dynamic and reflective problem-solving through thoughts.\nThis tool helps analyze problems through a flexible thinking process that can adapt and evolve.\nEach thought can build on, question, or revise previous insights as understanding deepens.")]
+        public static object SequentialThinking(ThoughtData arguments)
+        {
+            return _thinkingServer.ProcessThought(arguments);
         }
     }
 }
