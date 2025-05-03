@@ -85,6 +85,18 @@ namespace McpInsight.ViewModels
             }
         }
 
+        public async Task DisposeMcpMethodsAsync()
+        {
+            McpMethods.Clear();
+            _statusReporter.SetErrorMessage(string.Empty);
+            _statusReporter.SetStatusMessage(string.Empty);
+            _statusReporter.SetMethodResult(string.Empty);
+            if (_client != null)
+            {
+                await _client.DisposeAsync();
+            }
+        }
+
         /// <summary>
         /// MCPサーバー実行ファイルを検索
         /// </summary>
@@ -201,18 +213,6 @@ namespace McpInsight.ViewModels
                     var methodInfo = McpMethodFactory.CreateFromClientPrompt(prompt, exePath, exeName);
                     McpMethods.Add(methodInfo);
                 }
-            }
-        }
-
-        /// <summary>
-        /// リソースを解放
-        /// </summary>
-        public async Task DisposeAsync()
-        {
-            if (_client != null)
-            {
-                await _client.DisposeAsync();
-                _client = null;
             }
         }
     }

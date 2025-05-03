@@ -260,6 +260,13 @@ namespace McpInsight.ViewModels
             await LoadMcpMethodsAsync();
         }
 
+        [RelayCommand]
+        private async Task Dispose()
+        {
+            McpMethods.Clear();
+            await _methodLoader.DisposeMcpMethodsAsync();
+        }
+
         /// <summary>
         /// フォルダをエクスプローラーで開くコマンド
         /// </summary>
