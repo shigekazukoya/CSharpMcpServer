@@ -123,41 +123,14 @@ public static partial class FileSystemTools
     }
 
     //[McpServerTool, Description("Gets basic file information for multiple files. filePaths requires a List")]
-    //public static async Task<List<Dictionary<string, string>>> GetMultipleFilesInfoAsync([Description("The full paths to the files to be read.")] List<string>? filePaths,
-    //    [Description("The encoding to use (utf-8, shift-jis, etc.). Default is utf-8.")] string encodingName = "utf-8")
-    //{
-    //    Encoding encoding = ResolveEncoding(encodingName);
-    //    var results = new List<Dictionary<string, string>>();
-
-    //    foreach (string filePath in filePaths)
-    //    {
-    //        // セキュリティチェック
-    //        Security.ValidateIsAllowedDirectory(filePath);
-
-    //        // 最小限の情報を構築
-    //        var resultDict = new Dictionary<string, string>
-    //        {
-    //            ["filePath"] = filePath,
-    //            ["fileName"] = Path.GetFileName(filePath)
-    //        };
-
-    //        // 内容と行数の取得
-    //        string content = await File.ReadAllTextAsync(filePath, encoding);
-    //        resultDict["lineCount"] = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None).Length.ToString();
-    //        resultDict["content"] = content;
-
-    //        results.Add(resultDict);
-    //    }
-
-    //    return results;
-    //}
-
-    [McpServerTool, Description("Gets basic file information.")]
-    public static async Task<Dictionary<string, string>> GetMultipleFilesInfoAsync([Description("The full paths to the files to be read.")] string filePath,
+    public static async Task<List<Dictionary<string, string>>> GetMultipleFilesInfoAsync([Description("The full paths to the files to be read.")] string[]? filePaths,
         [Description("The encoding to use (utf-8, shift-jis, etc.). Default is utf-8.")] string encodingName = "utf-8")
     {
         Encoding encoding = ResolveEncoding(encodingName);
+        var results = new List<Dictionary<string, string>>();
 
+        foreach (string filePath in filePaths)
+        {
             // セキュリティチェック
             Security.ValidateIsAllowedDirectory(filePath);
 
@@ -173,15 +146,37 @@ public static partial class FileSystemTools
             resultDict["lineCount"] = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None).Length.ToString();
             resultDict["content"] = content;
 
+            results.Add(resultDict);
+        }
+
+        return results;
+    }
+
+    [McpServerTool, Description("Gets basic file information.")]
+    public static async Task<Dictionary<string, string>> GetFileInfo([Description("The full paths to the file to be read.")] string filePath,
+        [Description("The encoding to use (utf-8, shift-jis, etc.). Default is utf-8.")] string encodingName = "utf-8")
+    {
+        Encoding encoding = ResolveEncoding(encodingName);
+
+        // セキュリティチェック
+        Security.ValidateIsAllowedDirectory(filePath);
+
+        // 最小限の情報を構築
+        var resultDict = new Dictionary<string, string>
+        {
+            ["filePath"] = filePath,
+            ["fileName"] = Path.GetFileName(filePath)
+        };
+
+        // 内容と行数の取得
+        string content = await File.ReadAllTextAsync(filePath, encoding);
+        resultDict["lineCount"] = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None).Length.ToString();
+        resultDict["content"] = content;
+
 
         return resultDict;
     }
-    /// <summary>
-    /// ファイルやディレクトリを削除します
-    /// </summary>
-    /// <param name="fullPath">削除するファイルまたはディレクトリのパス</param>
-    /// <param name="recursive">ディレクトリ内の内容も削除するかどうか</param>
-    /// <returns>処理結果</returns>
+
     [McpServerTool, Description("Deletes a file or directory from the file system.")]
     public static string Delete(
         [Description("The full path of the file or directory to delete.")] string fullPath,

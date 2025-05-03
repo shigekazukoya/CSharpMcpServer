@@ -8,13 +8,6 @@ namespace FileSystem.Tools;
 
 public static partial class FileSystemTools
 {
-    /// <summary>
-    /// ファイルまたはディレクトリをZIP圧縮します
-    /// </summary>
-    /// <param name="path">圧縮するディレクトリまたはファイルのパス</param>
-    /// <param name="outputPath">出力するZIPファイルのパス（省略時は自動生成）</param>
-    /// <param name="compressionLevel">圧縮レベル（デフォルト: Optimal）</param>
-    /// <returns>処理結果（JSON形式）</returns>
     [McpServerTool, Description("圧縮ファイルを作成します")]
     public static async Task<string> ZipAsync(
         [Description("圧縮するディレクトリまたはファイルのパス")] string path,
@@ -103,13 +96,6 @@ public static partial class FileSystemTools
         }
     }
 
-    /// <summary>
-    /// ZIP圧縮ファイルを展開します
-    /// </summary>
-    /// <param name="filePath">展開するZIPファイルのパス</param>
-    /// <param name="outputPath">展開先ディレクトリのパス（省略時は自動生成）</param>
-    /// <param name="overwrite">既存ファイルを上書きするかどうか</param>
-    /// <returns>処理結果（JSON形式）</returns>
     [McpServerTool, Description("圧縮ファイルを展開します")]
     public static async Task<string> UnzipAsync(
         [Description("展開するZIPファイルのパス")] string filePath,
@@ -222,9 +208,6 @@ public static partial class FileSystemTools
         }
     }
 
-    /// <summary>
-    /// 文字列の圧縮レベルをCompressionLevelに変換します
-    /// </summary>
     private static CompressionLevel ParseCompressionLevel(string levelString)
     {
         if (string.IsNullOrWhiteSpace(levelString))

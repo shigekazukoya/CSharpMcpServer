@@ -8,12 +8,6 @@ namespace FileSystem.Tools;
 
 public static partial class FileSystemTools
 {
-    /// <summary>
-    /// ファイルまたはディレクトリを規定のアプリケーションで開きます
-    /// </summary>
-    /// <param name="path">開くファイルまたはディレクトリのパス</param>
-    /// <param name="verb">使用する動詞（open, edit, print など）</param>
-    /// <returns>処理結果（JSON形式）</returns>
     [McpServerTool, Description("ファイルまたはフォルダを規定のアプリケーションで開く")]
     public static string OpenWithApplication(
         [Description("ファイルまたはフォルダのパス")] string path,
@@ -77,11 +71,6 @@ public static partial class FileSystemTools
         }
     }
     
-    /// <summary>
-    /// ファイルに関連付けられたアプリケーション情報を取得します
-    /// </summary>
-    /// <param name="path">ファイルパス</param>
-    /// <returns>関連付け情報（JSON形式）</returns>
     //[McpServerTool, Description("ファイルに関連付けられたアプリケーション情報を取得します")]
     public static string GetFileAssociation(
         [Description("ファイルパス")] string path)
@@ -172,13 +161,6 @@ public static partial class FileSystemTools
         }
     }
     
-    /// <summary>
-    /// 指定したプログラムでファイルを開きます
-    /// </summary>
-    /// <param name="filePath">開くファイルのパス</param>
-    /// <param name="applicationPath">使用するアプリケーションのパス</param>
-    /// <param name="arguments">追加のコマンドライン引数</param>
-    /// <returns>処理結果（JSON形式）</returns>
     //[McpServerTool, Description("指定したプログラムでファイルを開きます")]
     public static string OpenWithSpecificApplication(
         [Description("開くファイルのパス")] string filePath,
