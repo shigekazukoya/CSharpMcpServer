@@ -3,10 +3,10 @@ using ModelContextProtocol.Server;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Text;
-namespace CreateMcpServerTools;
+namespace CreateMcpServer;
 
 [McpServerToolType]
-public static class CreateMcpServerTools
+public class CreateMcpServerTools
 {
     [McpServerTool, Description("Create a new MCP Server project")]
     public static string CreateMcpServerProject(string feature)
@@ -69,16 +69,22 @@ public static class CreateMcpServerTools
             }
         }
         
-        // CSharpMcpServer.Common プロジェクト参照を追加
-        AddProjectReference(folderPath, Path.Combine(CreateMcpServerPath.RootFolderPath, "..","Common", "CSharpMcpServer.Common.csproj"));
+        AddProjectPackage(folderPath, "Microsoft.Extensions.Hosting");
+        AddProjectPackage(folderPath, "ModelContextProtocol", prerelease: true);
     }
     
-    private static void AddProjectReference(string projectPath, string referenceProjectPath)
+    private static void AddProjectPackage(string projectPath, string packageName, bool prerelease = false)
     {
+        var arguments = $"add package {packageName}";
+        if (prerelease)
+        {
+            arguments += " --prerelease";
+        }
+        
         var processInfo = new ProcessStartInfo
         {
             FileName = "dotnet",
-            Arguments = $"add reference {referenceProjectPath}",
+            Arguments = arguments,
             WorkingDirectory = projectPath,
             RedirectStandardOutput = true,
             UseShellExecute = false,
@@ -90,7 +96,7 @@ public static class CreateMcpServerTools
             process.WaitForExit();
             if (process.ExitCode != 0)
             {
-                Console.WriteLine($"プロジェクト参照 {referenceProjectPath} の追加に失敗しました。");
+                Console.WriteLine($"プロジェクト参照 {packageName} の追加に失敗しました。");
             }
         }
     }
