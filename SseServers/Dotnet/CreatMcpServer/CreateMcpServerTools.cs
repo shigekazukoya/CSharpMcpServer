@@ -3,6 +3,7 @@ using ModelContextProtocol.Server;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Text;
+
 namespace CreateMcpServer;
 
 [McpServerToolType]
@@ -25,7 +26,7 @@ public class CreateMcpServerTools
         // プロジェクトファイルを作成
         try
         {
-            CreateConsoleProject(folderPath, feature);
+            CreateConsoleProject(folderPath);
         }
         catch (Exception ex)
         {
@@ -39,7 +40,7 @@ public class CreateMcpServerTools
         CreateToolsFile(folderPath, feature);
 
         // ソリューションファイルにプロジェクトを追加
-        if(AddProjectToSolution(feature, out var errorMesssage))
+        if (AddProjectToSolution(feature, out var errorMesssage))
         {
             return errorMesssage;
         }
@@ -47,55 +48,66 @@ public class CreateMcpServerTools
         return $"{feature} プロジェクトの作成が完了しました。";
     }
 
-    private static void CreateConsoleProject(string folderPath, string feature)
+    private static void CreateConsoleProject(string folderPath)
     {
-        // dotnet new console コマンドを実行
+        var scriptBlock = $@"
+        Set-Location '{folderPath.Replace("'", "''")}'
+        dotnet new console
+    ";
+
         var processInfo = new ProcessStartInfo
         {
-            FileName = "dotnet",
-            Arguments = "new console",
-            WorkingDirectory = folderPath,
+            FileName = "powershell.exe",
+            Arguments = $"-NoProfile -ExecutionPolicy Bypass -Command \"{scriptBlock.Replace("\"", "\\\"")}\"",
             RedirectStandardOutput = true,
+            RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
 
         using (var process = Process.Start(processInfo))
         {
+            var output = process.StandardOutput.ReadToEnd();
+            var error = process.StandardError.ReadToEnd();
             process.WaitForExit();
             if (process.ExitCode != 0)
             {
-                throw new Exception("コンソールプロジェクトの作成に失敗しました。");
+                throw new Exception($"コンソールプロジェクトの作成に失敗しました。{output}{error}");
             }
         }
-        
+
         AddProjectPackage(folderPath, "Microsoft.Extensions.Hosting");
         AddProjectPackage(folderPath, "ModelContextProtocol", prerelease: true);
     }
-    
+
     private static void AddProjectPackage(string projectPath, string packageName, bool prerelease = false)
     {
-        var arguments = $"add package {packageName}";
-        if (prerelease)
-        {
-            arguments += " --prerelease";
-        }
-        
+        var prereleaseText = prerelease ? "--prerelease" : "";
+
+        var scriptBlock = $@"
+        Set-Location '{projectPath.Replace("'", "''")}'
+        dotnet add package {packageName} {prereleaseText}
+    ";
+
         var processInfo = new ProcessStartInfo
         {
-            FileName = "dotnet",
-            Arguments = arguments,
-            WorkingDirectory = projectPath,
+            FileName = "powershell.exe",
+            Arguments = $"-NoProfile -ExecutionPolicy Bypass -Command \"{scriptBlock.Replace("\"", "\\\"")}\"",
             RedirectStandardOutput = true,
+            RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
 
         using (var process = Process.Start(processInfo))
         {
+            var output = process.StandardOutput.ReadToEnd();
+            var error = process.StandardError.ReadToEnd();
             process.WaitForExit();
             if (process.ExitCode != 0)
             {
+                Console.WriteLine(output);
+                Console.WriteLine(error);
                 Console.WriteLine($"プロジェクト参照 {packageName} の追加に失敗しました。");
             }
         }
@@ -154,22 +166,27 @@ public static class {feature}Tools
         // ルートフォルダにある .sln ファイルを検索
         string rootPath = CreateMcpServerPath.RootFolderPath;
         var parentDir = Directory.GetParent(rootPath);
-        var slnFiles = parentDir.GetFiles("*.sln").Select(x=>x.FullName); 
+        var slnFiles = parentDir.GetFiles("*.sln").Select(x => x.FullName);
 
         if (slnFiles.Count() == 0)
         {
-            errorMessage ="ソリューションファイルが見つかりませんでした。";
+            errorMessage = "ソリューションファイルが見つかりませんでした。";
             return false;
         }
 
         foreach (string slnFile in slnFiles)
         {
+            var scriptBlock = $@"
+        Set-Location '{parentDir.FullName.Replace("'", "''")}'
+        dotnet sln {slnFile} add {feature}\\{feature}.csproj
+    ";
+
             var processInfo = new ProcessStartInfo
             {
-                FileName = "dotnet",
-                Arguments = $"sln {slnFile} add {feature}\\{feature}.csproj",
-                WorkingDirectory = rootPath,
+                FileName = "powershell.exe",
+                Arguments = $"-NoProfile -ExecutionPolicy Bypass -Command \"{scriptBlock.Replace("\"", "\\\"")}\"",
                 RedirectStandardOutput = true,
+                RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
@@ -179,7 +196,7 @@ public static class {feature}Tools
                 process.WaitForExit();
                 if (process.ExitCode != 0)
                 {
-                    errorMessage =  $"プロジェクトをソリューション {slnFile} に追加できませんでした。";
+                    errorMessage = $"プロジェクトをソリューション {slnFile} に追加できませんでした。";
                     return false;
                 }
             }
